@@ -709,7 +709,15 @@ CRITICAL RULES:
   const userPrompt = `Generate the complete city intelligence JSON for: ${city}`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await const response = await fetch('/.netlify/functions/city-research', {
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({
+    city,
+    systemPrompt,
+    userPrompt
+  })
+});, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
