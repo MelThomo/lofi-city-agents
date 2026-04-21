@@ -602,7 +602,10 @@ let currentCity = '';
 async function generateResearch() {
   const cityInput = document.getElementById('cityInput');
   const city = cityInput.value.trim();
-  if (!city) { flashInput(); return; }
+  if (!city) {
+    flashInput();
+    return;
+  }
 
   currentCity = city;
   setStatus('running', `Researching ${city} — building city intelligence file…`);
@@ -710,50 +713,35 @@ CRITICAL RULES:
 
   try {
     const response = await fetch('/.netlify/functions/city-research', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify({
-    city,
-    systemPrompt,
-    userPrompt
-  })
-});
-
-if (!response.ok) {
-  const err = await response.json();
-  throw new Error(err.error || `API error ${response.status}`);
-}
-
-const data = await response.json();
-
-// 👇 IMPORTANT — this is different now
-const raw = data.result;
-
-let parsed;
-try {
-  parsed = JSON.parse(raw);
-} catch(e) {
-  throw new Error('JSON parse failed — malformed output');
-}
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        city,
+        systemPrompt,
+        userPrompt
+      })
+    });
 
     const data = await response.json();
-    const raw = data.content.map(b => b.text || '').join('');
 
-    // Strip any accidental markdown fences
-    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    if (!response.ok) {
+      throw new Error(data.error || `API error ${response.status}`);
+    }
 
+    const raw = data.result;
     let parsed;
+
     try {
-      parsed = JSON.parse(cleaned);
-    } catch(e) {
-      throw new Error('JSON parse failed — model returned malformed output. Try again.');
+      parsed = JSON.parse(raw);
+    } catch (e) {
+      throw new Error('JSON parse failed — malformed output');
     }
 
     currentJSON = parsed;
     showOutput(parsed, city);
     setStatus('done', `✓ City intelligence file generated for ${city} — review and approve below`);
 
-  } catch(err) {
+  } catch (err) {
     setStatus('error', `Error: ${err.message}`);
     console.error(err);
   } finally {
