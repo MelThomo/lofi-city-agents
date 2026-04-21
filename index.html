@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Lo-Fi City Ambience — Production Agents</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;1,300&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{background:#08080a;color:#ccc8c0;font-family:'JetBrains Mono',monospace;font-weight:300;min-height:100vh;display:flex;align-items:center;justify-content:center;padding:40px 20px;}
+  .hub{max-width:700px;width:100%;}
+  .logo{font-family:'Cormorant Garamond',serif;font-size:42px;font-weight:300;line-height:1.05;margin-bottom:8px;}
+  .logo em{color:#c8882a;font-style:italic;}
+  .sub{color:#5a5650;font-size:10px;letter-spacing:0.2em;text-transform:uppercase;margin-bottom:48px;}
+  .agents{display:flex;flex-direction:column;gap:12px;}
+  .agent{display:flex;align-items:center;justify-content:space-between;padding:18px 22px;background:#0f0f13;border:1px solid #1c1c26;border-radius:1px;text-decoration:none;color:inherit;transition:border-color 0.2s;}
+  .agent:hover{border-color:#c8882a;}
+  .agent-num{font-size:10px;color:#c8882a;letter-spacing:0.15em;margin-bottom:4px;}
+  .agent-name{font-family:'Cormorant Garamond',serif;font-size:20px;font-style:italic;}
+  .agent-desc{font-size:10px;color:#5a5650;margin-top:3px;}
+  .agent-arrow{color:#2e2e42;font-size:18px;transition:color 0.2s;}
+  .agent:hover .agent-arrow{color:#c8882a;}
+  .agent.active{border-color:#3a3a4a;}
+  .agent.soon{opacity:0.4;pointer-events:none;}
+</style>
+</head>
+<body>
+<div class="hub">
+  <div class="logo">Lo-Fi City <em>Ambience</em></div>
+  <div class="sub">Production Pipeline · Agent Hub</div>
+  <div class="agents">
+    <a href="agent1-city-research/index.html" class="agent active">
+      <div><div class="agent-num">AGENT 01</div><div class="agent-name">City Research Generator</div><div class="agent-desc">Cultural Scout Matrix · Production Card · JSON Output</div></div>
+      <div class="agent-arrow">→</div>
+    </a>
+    <a href="agent2-scene-generator/index.html" class="agent soon">
+      <div><div class="agent-num">AGENT 02</div><div class="agent-name">Scene Generator</div><div class="agent-desc">10–15 cinematic scene concepts from approved JSON</div></div>
+      <div class="agent-arrow">→</div>
+    </a>
+    <a href="agent3-image-prompt/index.html" class="agent soon">
+      <div><div class="agent-num">AGENT 03</div><div class="agent-name">Image Prompt Builder</div><div class="agent-desc">Leonardo.ai ready prompts · SOP compliant · Gate required</div></div>
+      <div class="agent-arrow">→</div>
+    </a>
+  </div>
+</div>
+</body>
+</html>

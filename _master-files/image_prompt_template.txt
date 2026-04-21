@@ -1,0 +1,34 @@
+IMAGE PROMPT TEMPLATE (Leonardo.ai)
+
+STRUCTURE:
+[Shot type + aspect ratio] + [Interior description] + [Cat position - SLEEPING] + 
+[Foreground items: beverage + snack + books] + [Window/view description] + 
+[Landmark description + lighting color] + [Weather/atmosphere] + 
+[Technical tags]
+
+MANDATORY ELEMENTS:
+- Cat: sleeping/curled, never standing
+- Table: local beverage + local snack + open book or stacked books
+- Landmark: fills 30-50% of window vertical space, "towering," "dominant anchor"
+- Cables: visible from any electronics
+- Perspective: wide-angle horizontal, high floor (8th+)
+
+TECHNICAL TAGS (always include):
+cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, 
+depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone
+
+SYDNEY EXAMPLE (Scene 1 - Approved Foundation):
+Wide cinematic 16:9 interior shot of a modern Sydney apartment at night. Foreground 
+lower-left: a sleek gas fireplace set into a dark stone wall, flames burning amber-gold, 
+casting warm volumetric light across a charcoal linen sofa where a tabby cat lies curled 
+and sleeping, one paw dangling toward the floor. Midground: a low timber coffee table 
+with a ceramic mug and open book catching firelight. Background right two-thirds: 
+floor-to-ceiling glass windows stretching the full width of the frame, rain streaking 
+the glass in long rivulets refracting city light into smeared threads of amber and 
+ice-blue. Beyond the glass, the Sydney Harbour Bridge arch glows yellow against a dense 
+cloud-filled winter sky, the Opera House shells luminous warm-white to its left, CBD 
+tower floors blazing in columns of amber and blue deep into the distance. Subtle diffuse 
+lightning blooms behind the cloud mass above the bridge. Warm interior amber light falls 
+off sharply against the cool blue-black exterior. Cinematic lighting, ultra realistic, 
+volumetric light, soft glow, rain reflections, moody atmosphere, depth, warm interior 
+contrast, night ambience, highly detailed, immersive, 4k, filmic tone.

@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent 1 — City Research · Lo-Fi City Ambience</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #08080a;
+    --surface: #0f0f13;
+    --surface2: #13131a;
+    --border: #1c1c26;
+    --border-lit: #2e2e42;
+    --amber: #c8882a;
+    --amber-soft: #a06820;
+    --amber-glow: rgba(200,136,42,0.08);
+    --amber-glow-strong: rgba(200,136,42,0.18);
+    --text: #ccc8c0;
+    --text-dim: #5a5650;
+    --text-mid: #8a8680;
+    --green: #3a8a5a;
+    --green-glow: rgba(58,138,90,0.12);
+    --red: #8a3a3a;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    font-size: 12px;
+    min-height: 100vh;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* Ambient orb */
+  .ambient {
+    position: fixed;
+    top: -300px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 800px;
+    height: 600px;
+    background: radial-gradient(ellipse at center, rgba(200,136,42,0.035) 0%, transparent 65%);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .wrap {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 48px 32px 80px;
+  }
+
+  /* ── HEADER ── */
+  .header {
+    margin-bottom: 52px;
+  }
+
+  .breadcrumb {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 20px;
+  }
+
+  .breadcrumb span { color: var(--amber); }
+
+  .title-block {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+
+  h1 {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 300;
+    line-height: 1.05;
+    letter-spacing: -0.01em;
+  }
+
+  h1 em {
+    font-style: italic;
+    color: var(--amber);
+  }
+
+  .header-meta {
+    text-align: right;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    line-height: 1.8;
+    padding-top: 8px;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    padding: 14px 20px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    margin-bottom: 44px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pipeline::-webkit-scrollbar { display: none; }
+
+  .pipe-node {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    white-space: nowrap;
+    font-size: 10px;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    flex-shrink: 0;
+  }
+
+  .pipe-node.active {
+    color: var(--amber);
+  }
+
+  .pipe-node.active .pipe-dot {
+    background: var(--amber);
+    box-shadow: 0 0 10px rgba(200,136,42,0.6);
+  }
+
+  .pipe-dot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+    background: var(--border-lit);
+    flex-shrink: 0;
+  }
+
+  .pipe-sep {
+    width: 28px;
+    height: 1px;
+    background: var(--border);
+    margin: 0 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── SECTION LABELS ── */
+  .section-label {
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .section-label::before {
+    content: '';
+    display: block;
+    width: 16px;
+    height: 1px;
+    background: var(--amber-soft);
+  }
+
+  /* ── INPUT ── */
+  .input-section { margin-bottom: 20px; }
+
+  .input-row {
+    display: flex;
+    gap: 10px;
+  }
+
+  .city-input {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    color: var(--text);
+    font-family: 'Cormorant Garamond', serif;
+    font-size: clamp(22px, 3vw, 32px);
+    font-weight: 300;
+    font-style: italic;
+    padding: 14px 20px;
+    outline: none;
+    transition: border-color 0.25s, box-shadow 0.25s;
+    letter-spacing: 0.02em;
+  }
+
+  .city-input::placeholder { color: var(--text-dim); }
+
+  .city-input:focus {
+    border-color: var(--amber-soft);
+    box-shadow: 0 0 0 1px rgba(200,136,42,0.2), inset 0 0 30px rgba(200,136,42,0.02);
+  }
+
+  .btn-generate {
+    background: var(--amber);
+    color: #08080a;
+    border: none;
+    border-radius: 1px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 0 32px;
+    cursor: pointer;
+    transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+    min-width: 140px;
+    flex-shrink: 0;
+  }
+
+  .btn-generate:hover:not(:disabled) {
+    background: #d9992e;
+    box-shadow: 0 0 24px rgba(200,136,42,0.35);
+  }
+
+  .btn-generate:active:not(:disabled) { transform: translateY(1px); }
+
+  .btn-generate:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+  }
+
+  /* ── STATUS ── */
+  .status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 11px 16px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    margin-bottom: 28px;
+    font-size: 11px;
+    color: var(--text-dim);
+    min-height: 42px;
+    transition: border-color 0.3s, color 0.3s;
+  }
+
+  .status.running { border-color: var(--amber-soft); color: var(--amber); }
+  .status.done    { border-color: var(--green); color: var(--green); }
+  .status.error   { border-color: var(--red); color: #c86060; }
+
+  .status-dot {
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+    flex-shrink: 0;
+  }
+
+  .status.running .status-dot { animation: blink 1.1s ease-in-out infinite; }
+
+  @keyframes blink {
+    0%,100% { opacity: 1; }
+    50%      { opacity: 0.15; }
+  }
+
+  /* ── OUTPUT ── */
+  .output-wrap { display: none; }
+  .output-wrap.visible { display: block; }
+
+  .output-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .output-city-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 18px;
+    font-style: italic;
+    color: var(--amber);
+    letter-spacing: 0.04em;
+  }
+
+  .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border-lit);
+    border-radius: 1px;
+    color: var(--text-mid);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    padding: 7px 16px;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+
+  .btn:hover { border-color: var(--amber-soft); color: var(--amber); }
+
+  .btn.amber { border-color: var(--amber-soft); color: var(--amber); }
+  .btn.amber:hover { background: var(--amber-glow); }
+
+  .btn.green { border-color: var(--green); color: var(--green); }
+  .btn.green:hover { background: var(--green-glow); }
+
+  .json-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    padding: 24px;
+    font-size: 11.5px;
+    line-height: 1.75;
+    white-space: pre-wrap;
+    word-break: break-word;
+    max-height: 580px;
+    overflow-y: auto;
+    color: #aea8a0;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-lit) transparent;
+    tab-size: 2;
+  }
+
+  .json-box::-webkit-scrollbar { width: 3px; }
+  .json-box::-webkit-scrollbar-thumb { background: var(--border-lit); border-radius: 2px; }
+
+  /* Syntax highlight */
+  .jk { color: #c09060; }   /* key */
+  .js { color: #8ab890; }   /* string value */
+  .jn { color: #7aa8c8; }   /* number */
+  .jb { color: #c8a060; }   /* bool/null */
+  .jp { color: var(--text-dim); } /* punctuation */
+
+  /* ── GATE ── */
+  .gate {
+    margin-top: 20px;
+    padding: 22px 24px;
+    background: var(--surface2);
+    border: 1px solid var(--border-lit);
+    border-radius: 1px;
+    display: none;
+  }
+
+  .gate.visible { display: block; }
+
+  .gate-heading {
+    font-size: 10px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .gate-heading::before {
+    content: '▶';
+    font-size: 7px;
+  }
+
+  .gate-body {
+    color: var(--text-mid);
+    font-size: 11px;
+    line-height: 1.8;
+    margin-bottom: 18px;
+  }
+
+  .gate-body strong { color: var(--text); font-weight: 400; }
+
+  .gate-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  /* ── APPROVED BANNER ── */
+  .approved {
+    display: none;
+    align-items: center;
+    gap: 10px;
+    padding: 13px 18px;
+    background: var(--green-glow);
+    border: 1px solid var(--green);
+    border-radius: 1px;
+    margin-top: 16px;
+    font-size: 11px;
+    color: var(--green);
+    letter-spacing: 0.08em;
+  }
+
+  .approved.visible { display: flex; }
+
+  .approved-next {
+    margin-left: auto;
+    background: var(--green);
+    color: #08080a;
+    border: none;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    padding: 8px 18px;
+    cursor: pointer;
+    border-radius: 1px;
+    transition: opacity 0.2s;
+  }
+
+  .approved-next:hover { opacity: 0.85; }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: var(--border);
+    margin: 44px 0;
+  }
+
+  /* ── FOOTER ── */
+  .footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    color: var(--text-dim);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .footer a {
+    color: var(--amber-soft);
+    text-decoration: none;
+  }
+
+  /* ── COPY TOAST ── */
+  .toast {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--surface2);
+    border: 1px solid var(--green);
+    color: var(--green);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    padding: 10px 20px;
+    border-radius: 1px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: opacity 0.2s, transform 0.2s;
+    pointer-events: none;
+    z-index: 100;
+  }
+
+  .toast.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 28px 16px 60px; }
+    .title-block { flex-direction: column; }
+    .header-meta { text-align: left; }
+    .input-row { flex-direction: column; }
+    .btn-generate { padding: 14px; min-width: unset; }
+  }
+</style>
+</head>
+<body>
+
+<div class="ambient"></div>
+
+<div class="wrap">
+
+  <!-- Header -->
+  <header class="header">
+    <div class="breadcrumb">
+      Lo-Fi City Ambience <span>/</span> Production Pipeline <span>/</span> Agent 1
+    </div>
+    <div class="title-block">
+      <h1>City <em>Research</em><br>Generator</h1>
+      <div class="header-meta">
+        Agent 01 of 08<br>
+        Cultural Scout Matrix<br>
+        Production Card Output<br>
+        <span style="color:var(--amber)">Gate Required</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Pipeline -->
+  <div class="pipeline">
+    <div class="pipe-node active"><div class="pipe-dot"></div>01 Research</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>02 Scenes</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>03 Image Prompt</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>Gate: Foundation</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>04 Variations</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>05 Animation</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>06 10hr Video</div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-section">
+    <div class="section-label">City Name</div>
+    <div class="input-row">
+      <input
+        type="text"
+        class="city-input"
+        id="cityInput"
+        placeholder="Tokyo, Rome, New York, Sydney…"
+        autocomplete="off"
+        onkeydown="if(event.key==='Enter') generateResearch()"
+      />
+      <button class="btn-generate" id="generateBtn" onclick="generateResearch()">
+        Generate
+      </button>
+    </div>
+  </div>
+
+  <!-- Status -->
+  <div class="status" id="statusBar">
+    <div class="status-dot"></div>
+    <span id="statusText">Ready — enter a city name and hit Generate</span>
+  </div>
+
+  <!-- Output -->
+  <div class="output-wrap" id="outputWrap">
+
+    <div class="output-toolbar">
+      <div class="output-city-name" id="outputCityName"></div>
+      <div class="btn-row">
+        <button class="btn" onclick="copyJSON()">Copy JSON</button>
+        <button class="btn amber" onclick="downloadJSON()">↓ Download .json</button>
+      </div>
+    </div>
+
+    <div class="json-box" id="jsonBox"></div>
+
+    <!-- Approval Gate -->
+    <div class="gate visible" id="gate">
+      <div class="gate-heading">Approval Gate — Agent 1 Output</div>
+      <div class="gate-body">
+        Review the city intelligence file above.<br>
+        Check that <strong>landmarks</strong>, <strong>production card selections</strong>,
+        <strong>cultural details</strong>, lighting notes, and the <strong>cat rule</strong> are accurate.<br><br>
+        Approve to unlock <strong>Agent 2 — Scene Generator</strong>. Reject to regenerate with notes.
+      </div>
+      <div class="gate-actions">
+        <button class="btn green" onclick="approveResearch()">✓ Approve &amp; Proceed to Agent 2</button>
+        <button class="btn" onclick="rejectResearch()">✗ Regenerate</button>
+      </div>
+    </div>
+
+    <!-- Approved Banner -->
+    <div class="approved" id="approvedBanner">
+      <span>✓</span>
+      <span id="approvedText">Research approved —</span>
+      <button class="approved-next" onclick="goToAgent2()">Open Agent 2 →</button>
+    </div>
+
+  </div>
+
+  <div class="divider"></div>
+
+  <footer class="footer">
+    <span>Lo-Fi City Ambience · Production System · Agent 01</span>
+    <span>github.com/MelThomo/lofi-city-agents</span>
+  </footer>
+
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">Copied to clipboard</div>
+
+<script>
+// ─────────────────────────────────────────
+// STATE
+// ─────────────────────────────────────────
+let currentJSON = null;
+let currentCity = '';
+
+// ─────────────────────────────────────────
+// MAIN GENERATE
+// ─────────────────────────────────────────
+async function generateResearch() {
+  const cityInput = document.getElementById('cityInput');
+  const city = cityInput.value.trim();
+  if (!city) { flashInput(); return; }
+
+  currentCity = city;
+  setStatus('running', `Researching ${city} — building city intelligence file…`);
+  setBtn(true);
+  hideOutput();
+
+  const systemPrompt = `You are the City Research Agent for a YouTube lo-fi ambience channel called "Lo-Fi City Ambience". 
+Your job is to generate a structured JSON city intelligence file used to guide AI image and video generation for cinematic lofi ambience videos.
+
+You must output ONLY valid JSON — no preamble, no markdown, no backticks. Just raw JSON.
+
+The JSON must follow this exact structure with all fields populated:
+
+{
+  "city": "string",
+  "country": "string",
+  "folder_name": "CC-CityName format e.g. AU-Sydney, USA-NewYork, IT-Rome",
+  "status": "research_complete",
+  "production_card": {
+    "anchor": {
+      "landmark": "the single most iconic landmark for this city",
+      "secondary_landmark": "second most recognisable landmark if applicable",
+      "nighttime_color": "specific lighting color description for the landmark at night",
+      "window_fill": "what % of the window frame the landmark should fill"
+    },
+    "window_style": "specific window type authentic to this city's architecture",
+    "table": {
+      "beverage": "the most iconic local drink",
+      "snack": "authentic local snack or food item",
+      "constant": "open book or stacked books — always present"
+    },
+    "soul": {
+      "pet": "most culturally appropriate pet breed for this city — ALWAYS sleeping in foundation image",
+      "hobby_item": "one creative prop authentic to the city culture e.g. vinyl player, surfboard, chess set"
+    },
+    "street": {
+      "vehicle": "most iconic local vehicle visible through the window",
+      "atmospheric_detail": "weather or environmental detail authentic to this city"
+    },
+    "sop_keywords": {
+      "perspective": "floor level, apartment style, view description",
+      "landmark_scale": "always use: towering, majestic, dominant anchor",
+      "forbidden": ["split-screen", "floating furniture", "cat standing", "roads pointing at building"],
+      "cat_rule": "ALWAYS sleeping/curled in foundation image. Never standing. Variations come after approval only."
+    }
+  },
+  "identity": {
+    "core_vibe": ["5 evocative phrases capturing the soul of this city"],
+    "emotional_triggers": ["8 specific sensory moments unique to this city"]
+  },
+  "landmarks": {
+    "man_made": [
+      {
+        "name": "landmark name",
+        "type": "type description",
+        "recognition": "high/medium/low",
+        "notes": "specific visual details for AI generation — shapes, colors, materials, lighting"
+      }
+    ],
+    "natural": [
+      {
+        "name": "natural landmark name",
+        "type": "type",
+        "recognition": "high/medium/low",
+        "notes": "visual detail notes"
+      }
+    ]
+  },
+  "architecture": {
+    "dominant_styles": ["3-5 architectural styles with era and key features"],
+    "materials": ["key building materials and textures specific to this city"]
+  },
+  "weather_patterns": {
+    "seasonality": ["4 seasons with temperature and conditions"],
+    "visual_effects": ["5-6 specific atmospheric visual conditions for this city"]
+  },
+  "lighting_style": {
+    "night": ["5-6 specific night lighting observations for this city"],
+    "signature": ["2-3 defining lighting characteristics"]
+  },
+  "sound_profile": ["8-10 specific ambient sounds unique to this city"],
+  "iconic_objects": ["8-10 culturally specific objects found in daily life"],
+  "micro_details": ["10-12 hyper-specific tiny details a local would recognise"],
+  "animal_culture": {
+    "scene_pet": "specific breed and sleeping position for the foundation scene",
+    "cultural_animals": ["wildlife or animals integrated into daily city life"]
+  },
+  "vehicle_culture": {
+    "scene_vehicle": "the one vehicle most visible/iconic for window views",
+    "iconic": ["3-5 vehicles defining this city's transport culture"]
+  },
+  "viewpoint_opportunities": [
+    "8-10 specific real viewpoints in this city ideal for lofi ambience scenes"
+  ]
+}
+
+CRITICAL RULES:
+- Cat is ALWAYS sleeping in foundation images. Never standing. This is non-negotiable.
+- Books are ALWAYS on the table as a constant across all cities.
+- The landmark must be specific, iconic, and visually dominant.
+- All details must be authentic and specific to this exact city — never generic.
+- Output ONLY the JSON object. Nothing else.`;
+
+  const userPrompt = `Generate the complete city intelligence JSON for: ${city}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `API error ${response.status}`);
+    }
+
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || '').join('');
+
+    // Strip any accidental markdown fences
+    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+
+    let parsed;
+    try {
+      parsed = JSON.parse(cleaned);
+    } catch(e) {
+      throw new Error('JSON parse failed — model returned malformed output. Try again.');
+    }
+
+    currentJSON = parsed;
+    showOutput(parsed, city);
+    setStatus('done', `✓ City intelligence file generated for ${city} — review and approve below`);
+
+  } catch(err) {
+    setStatus('error', `Error: ${err.message}`);
+    console.error(err);
+  } finally {
+    setBtn(false);
+  }
+}
+
+// ─────────────────────────────────────────
+// DISPLAY
+// ─────────────────────────────────────────
+function showOutput(data, city) {
+  document.getElementById('outputWrap').classList.add('visible');
+  document.getElementById('outputCityName').textContent = `${city} — Intelligence File`;
+  document.getElementById('gate').classList.add('visible');
+  document.getElementById('approvedBanner').classList.remove('visible');
+
+  const pretty = JSON.stringify(data, null, 2);
+  document.getElementById('jsonBox').innerHTML = syntaxHighlight(pretty);
+
+  // Scroll to output smoothly
+  setTimeout(() => {
+    document.getElementById('outputWrap').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }, 100);
+}
+
+function hideOutput() {
+  document.getElementById('outputWrap').classList.remove('visible');
+  document.getElementById('approvedBanner').classList.remove('visible');
+}
+
+function syntaxHighlight(json) {
+  return json
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, (match) => {
+      if (/^"/.test(match)) {
+        if (/:$/.test(match)) return `<span class="jk">${match}</span>`;
+        return `<span class="js">${match}</span>`;
+      }
+      if (/true|false|null/.test(match)) return `<span class="jb">${match}</span>`;
+      return `<span class="jn">${match}</span>`;
+    });
+}
+
+// ─────────────────────────────────────────
+// GATE ACTIONS
+// ─────────────────────────────────────────
+function approveResearch() {
+  document.getElementById('gate').style.display = 'none';
+  const banner = document.getElementById('approvedBanner');
+  banner.classList.add('visible');
+  document.getElementById('approvedText').textContent =
+    `${currentCity} research approved — ready for Agent 2`;
+
+  // Save approved flag to localStorage for dashboard awareness
+  try {
+    const key = `lofi_agent1_${currentCity.toLowerCase().replace(/\s+/g,'_')}`;
+    localStorage.setItem(key, JSON.stringify({
+      city: currentCity,
+      approved: true,
+      timestamp: new Date().toISOString(),
+      data: currentJSON
+    }));
+  } catch(e) { /* storage not critical */ }
+
+  setStatus('done', `✓ ${currentCity} approved — proceed to Agent 2: Scene Generator`);
+}
+
+function rejectResearch() {
+  const notes = prompt('Optional: add notes for regeneration (or leave blank and click OK)');
+  const cityInput = document.getElementById('cityInput');
+  if (notes) cityInput.value = `${currentCity} — ${notes}`;
+  generateResearch();
+}
+
+function goToAgent2() {
+  // Will link to agent2/index.html once built
+  // Pass city name via URL param
+  const params = new URLSearchParams({ city: currentCity });
+  window.location.href = `../agent2-scene-generator/index.html?${params}`;
+}
+
+// ─────────────────────────────────────────
+// UTILITIES
+// ─────────────────────────────────────────
+function setStatus(type, text) {
+  const bar = document.getElementById('statusBar');
+  bar.className = 'status ' + type;
+  document.getElementById('statusText').textContent = text;
+}
+
+function setBtn(disabled) {
+  const btn = document.getElementById('generateBtn');
+  btn.disabled = disabled;
+  btn.textContent = disabled ? 'Researching…' : 'Generate';
+}
+
+function flashInput() {
+  const input = document.getElementById('cityInput');
+  input.style.borderColor = 'var(--red)';
+  input.focus();
+  setTimeout(() => input.style.borderColor = '', 1000);
+}
+
+function copyJSON() {
+  if (!currentJSON) return;
+  navigator.clipboard.writeText(JSON.stringify(currentJSON, null, 2))
+    .then(() => showToast('Copied to clipboard'))
+    .catch(() => showToast('Copy failed — select manually'));
+}
+
+function downloadJSON() {
+  if (!currentJSON) return;
+  const filename = `${(currentJSON.folder_name || currentCity).replace(/\s+/g,'-')}_city-research.json`;
+  const blob = new Blob([JSON.stringify(currentJSON, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename; a.click();
+  URL.revokeObjectURL(url);
+  showToast(`Downloaded: ${filename}`);
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+</script>
+
+</body>
+</html>

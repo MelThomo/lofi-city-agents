@@ -1,0 +1,64 @@
+Lo-Fi City Ambience: Technical Standard Operating Procedures (SOP)
+
+1. THE ANTI-SURREALISM PROTOCOL (Architectural Logic)
+
+THE ALICE IN WONDERLAND FIX (Perspective)
+- Problem: AI generates vertical tables, sideways windows, or impossible room orientations.
+- SOP: Always use explicit orientation keywords: "wide-angle horizontal perspective," "flat wooden floor at the bottom of the frame," "horizontal table surface."
+- Constraint: Forbid "split-screen," "letterbox," or "panelled" layouts. The image must be a single, continuous cinematic frame.
+
+THE SMASHING CAR FIX (Road Geometry)
+- Problem: Roads appear to point directly into the side of the apartment building.
+- SOP: Force a "High-Floor Perspective" (e.g., 8th floor).
+- Geometry: Distant roads must be rendered as horizontal avenues crossing the frame in the background, far below the window line.
+
+THE TOY LANDMARK FIX (Scale)
+- Problem: Iconic landmarks appear small or out of scale.
+- SOP: Use "towering," "majestic," and "dominant anchor" in the prompt. Ensure the landmark fills at least 30-50% of the window's vertical space.
+
+2. THE FUNCTIONAL REALISM PROTOCOL (Interior Design)
+
+THE FLOATING PROP FIX (Furniture Logic)
+- Problem: Electronics placed in the center of dining tables with no context.
+- SOP: Relocate heavy electronics to a dedicated side table, low shelf, or sideboard.
+- Table Content: Dining/coffee tables reserved for "active" items: local beverages, local snacks, books, candles, small items.
+
+THE INVISIBLE POWER FIX (Wiring)
+- Problem: Electronics look like magic props with no power source.
+- SOP: Mandatory inclusion of subtle black power and audio cables running from the back of the device toward the wall or floor.
+
+THE MUSICAL ALIGNMENT FIX (Instruments)
+- Problem: Piano keys are irregular or music sheets are mismatched.
+- SOP: Specify "identical music sheets, perfectly aligned" and "standard upright piano geometry."
+
+3. THE LIVING SOUL ANIMATION STANDARDS
+
+THE CAT RULE (CRITICAL)
+- Foundation image: Cat must ALWAYS be sleeping/curled up. Never standing in the foundation image.
+- Sleeping positions: Curled, lying on side, paws tucked under. One paw dangling is acceptable.
+- Breathing: Always include "slow, rhythmic, peaceful breathing" as the base animation layer.
+- Variations (after foundation approved): Tail flick, ear twitch, stretch — never standing or walking in loops.
+- Tail: Use "subtle, rhythmic tail-tip flick" for animation modules.
+- Cat placement: Wherever is natural and comfortable — sofa, armchair, window sill, floor rug.
+
+LOOP-PERFECT ANIMATION (5-Second Modules)
+- Micro-Stretch (Recommended): Cat stays lying down, extends front paws, arches back slightly, relaxes back.
+- Full Movement (Avoid for Loops): Standing up or walking — creates jarring jumps.
+
+ATMOSPHERIC LAYERING
+- Module B (Storm): Sharp, realistic lightning flashes illuminating the landmark and interior.
+- Module D (Horizon Glow): Soft, white pulses behind the landmark on the horizon. No sharp flashes.
+
+4. THE CULTURAL SCOUT RESEARCH MATRIX
+
+For every new city, the research must confirm:
+1. The Anchor: Landmark + its specific night-time lighting color
+2. The Architecture: Local window style
+3. The Table: 1 Local Beverage + 1 Local Snack + Books (universal constant)
+4. The Soul: 1 Local Pet Breed + 1 Creative Hobby Item
+5. The Street: 1 Local Vehicle + 1 Atmospheric Detail
+
+TABLE CONSTANTS (all cities):
+- Books: Always present on the table — open or stacked. Universal, soothing.
+- Local beverage: City-specific (e.g., flat white for Sydney, espresso for Rome)
+- Local snack: City-specific (e.g., Tim Tams for Sydney, pizza slice for Rome)
