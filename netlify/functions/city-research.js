@@ -26,15 +26,31 @@ exports.handler = async function (event) {
 
     const data = await response.json();
 
+    if (!response.ok) {
+      return {
+        statusCode: response.status,
+        body: JSON.stringify({
+          error: data.error?.message || 'Anthropic request failed'
+        })
+      };
+    }
+
+    const result = (data.content || [])
+      .map(block => block.text || '')
+      .join('')
+      .replace(/```json\n?/g, '')
+      .replace(/```\n?/g, '')
+      .trim();
+
     return {
       statusCode: 200,
-      body: JSON.stringify(data)
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ result })
     };
-
   } catch (error) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: error.message })
+      body: JSON.stringify({ error: error.message || 'Server error' })
     };
   }
 };
