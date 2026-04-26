@@ -914,16 +914,12 @@ function approveResearch() {
   document.getElementById('approvedText').textContent =
     `${currentCity} research approved — ready for Agent 2`;
 
-  // Save approved flag to localStorage for dashboard awareness
   try {
     const key = `lofi_agent1_${currentCity.toLowerCase().replace(/\s+/g,'_')}`;
-    localStorage.setItem(key, JSON.stringify({
-      city: currentCity,
-      approved: true,
-      timestamp: new Date().toISOString(),
-      data: currentJSON
-    }));
-  } catch(e) { /* storage not critical */ }
+    localStorage.setItem(key, JSON.stringify({ city: currentCity, approved: true, timestamp: new Date().toISOString(), data: currentJSON }));
+    localStorage.setItem('lofi_last_approved_city', currentCity);
+    localStorage.setItem('lofi_last_approved_json', JSON.stringify(currentJSON));
+  } catch(e) {}
 
   setStatus('done', `✓ ${currentCity} approved — proceed to Agent 2: Scene Generator`);
 }
