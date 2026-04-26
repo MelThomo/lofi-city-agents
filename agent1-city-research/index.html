@@ -653,7 +653,7 @@
 // ─────────────────────────────────────────
 function loadApiKey() {
   try {
-    const saved = sessionStorage.getItem('lofi_anthropic_key');
+    const saved = localStorage.getItem('lofi_anthropic_key');
     if (saved) {
       document.getElementById('apikeyInput').value = saved;
       document.getElementById('apikeySaved').classList.add('visible');
@@ -668,7 +668,7 @@ function saveApiKey() {
     return;
   }
   try {
-    sessionStorage.setItem('lofi_anthropic_key', key);
+    localStorage.setItem('lofi_anthropic_key', key);
     document.getElementById('apikeySaved').classList.add('visible');
     showToast('API key saved for this session');
   } catch(e) {}
@@ -676,7 +676,7 @@ function saveApiKey() {
 
 function clearApiKey() {
   try {
-    sessionStorage.removeItem('lofi_anthropic_key');
+    localStorage.removeItem('lofi_anthropic_key');
     document.getElementById('apikeyInput').value = '';
     document.getElementById('apikeySaved').classList.remove('visible');
     showToast('API key cleared');
@@ -685,7 +685,7 @@ function clearApiKey() {
 
 function getApiKey() {
   try {
-    return sessionStorage.getItem('lofi_anthropic_key') || document.getElementById('apikeyInput').value.trim();
+    return localStorage.getItem('lofi_anthropic_key') || document.getElementById('apikeyInput').value.trim();
   } catch(e) {
     return document.getElementById('apikeyInput').value.trim();
   }
