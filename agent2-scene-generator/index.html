@@ -432,10 +432,22 @@ function showToast(msg) {
   setTimeout(() => t.classList.remove('show'), 2500);
 }
 
-// Pre-fill from URL param if coming from Agent 1
-const urlParams = new URLSearchParams(window.location.search);
-const cityParam = urlParams.get('city');
-if (cityParam) document.getElementById('cityDisplay').textContent = cityParam;
+// Auto-load from localStorage if available
+try {
+  const savedJSON = localStorage.getItem('lofi_last_approved_json');
+  const savedCity = localStorage.getItem('lofi_last_approved_city');
+  if (savedJSON && savedCity) {
+    currentCity = savedCity;
+    currentJSON = JSON.parse(savedJSON);
+    document.getElementById('cityDisplay').textContent = savedCity + ', ' + (currentJSON.country || '');
+    document.getElementById('jsonInput').value = JSON.stringify(currentJSON, null, 2);
+    setStatus('done', 'City JSON auto-loaded from Agent 1 — hit Generate Scenes when ready');
+  }
+} catch(e) {
+  const urlParams = new URLSearchParams(window.location.search);
+  const cityParam = urlParams.get('city');
+  if (cityParam) document.getElementById('cityDisplay').textContent = cityParam;
+}
 </script>
 </body>
 </html>
