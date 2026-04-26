@@ -1,4 +1,4 @@
- <!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -257,17 +257,17 @@ let selectedScenes = new Set();
 // API Key
 function loadApiKey() {
   try {
-    const saved = sessionStorage.getItem('lofi_anthropic_key');
+    const saved = localStorage.getItem('lofi_anthropic_key');
     if (saved) { document.getElementById('apikeyInput').value = saved; document.getElementById('apikeySaved').style.display = 'inline'; }
   } catch(e) {}
 }
 function saveApiKey() {
   const key = document.getElementById('apikeyInput').value.trim();
   if (!key.startsWith('sk-ant-')) { alert('Key should start with sk-ant-'); return; }
-  try { sessionStorage.setItem('lofi_anthropic_key', key); document.getElementById('apikeySaved').style.display = 'inline'; showToast('API key saved'); } catch(e) {}
+  try { localStorage.setItem('lofi_anthropic_key', key); document.getElementById('apikeySaved').style.display = 'inline'; showToast('API key saved'); } catch(e) {}
 }
 function getApiKey() {
-  try { return sessionStorage.getItem('lofi_anthropic_key') || document.getElementById('apikeyInput').value.trim(); } catch(e) { return document.getElementById('apikeyInput').value.trim(); }
+  try { return localStorage.getItem('lofi_anthropic_key') || document.getElementById('apikeyInput').value.trim(); } catch(e) { return document.getElementById('apikeyInput').value.trim(); }
 }
 loadApiKey();
 
@@ -406,7 +406,7 @@ function approveScenes() {
   if (selectedScenes.size === 0) { showToast('Select at least one scene first'); return; }
   const selected = [...selectedScenes].map(i => scenes[i]);
   try {
-    sessionStorage.setItem(`lofi_scenes_${currentCity.toLowerCase().replace(/\s+/g,'_')}`, JSON.stringify({ city: currentCity, approved: true, timestamp: new Date().toISOString(), scenes: selected }));
+    localStorage.setItem(`lofi_scenes_${currentCity.toLowerCase().replace(/\s+/g,'_')}`, JSON.stringify({ city: currentCity, approved: true, timestamp: new Date().toISOString(), scenes: selected }));
   } catch(e) {}
   document.getElementById('gate').style.display = 'none';
   const banner = document.getElementById('approvedBanner');
