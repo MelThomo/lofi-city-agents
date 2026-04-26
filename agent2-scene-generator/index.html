@@ -1,5 +1,441 @@
-<!DOCTYPE html>
-<html><head><title>Agent 2 — Coming Soon</title></head>
-<body style="background:#08080a;color:#c8882a;font-family:monospace;display:flex;align-items:center;justify-content:center;height:100vh;font-size:14px;">
-Agent 2 — Scene Generator — Coming Soon
-</body></html>
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agent 2 — Scene Generator · Lo-Fi City Ambience</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --bg: #08080a;
+    --surface: #0f0f13;
+    --surface2: #13131a;
+    --border: #1c1c26;
+    --border-lit: #2e2e42;
+    --amber: #c8882a;
+    --amber-soft: #a06820;
+    --amber-glow: rgba(200,136,42,0.08);
+    --text: #ccc8c0;
+    --text-dim: #5a5650;
+    --text-mid: #8a8680;
+    --green: #3a8a5a;
+    --green-glow: rgba(58,138,90,0.12);
+    --red: #8a3a3a;
+  }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    font-size: 12px;
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+  .ambient {
+    position: fixed; top: -300px; left: 50%; transform: translateX(-50%);
+    width: 800px; height: 600px;
+    background: radial-gradient(ellipse at center, rgba(200,136,42,0.035) 0%, transparent 65%);
+    pointer-events: none; z-index: 0;
+  }
+  .wrap { position: relative; z-index: 1; max-width: 900px; margin: 0 auto; padding: 48px 32px 80px; }
+
+  .header { margin-bottom: 52px; }
+  .breadcrumb { display: flex; align-items: center; gap: 8px; font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 20px; }
+  .breadcrumb span { color: var(--amber); }
+  .title-block { display: flex; align-items: flex-start; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
+  h1 { font-family: 'Cormorant Garamond', serif; font-size: clamp(32px, 5vw, 52px); font-weight: 300; line-height: 1.05; }
+  h1 em { font-style: italic; color: var(--amber); }
+  .header-meta { text-align: right; color: var(--text-dim); font-size: 10px; letter-spacing: 0.08em; line-height: 1.8; padding-top: 8px; }
+
+  .pipeline { display: flex; align-items: center; padding: 14px 20px; background: var(--surface); border: 1px solid var(--border); border-radius: 1px; margin-bottom: 44px; overflow-x: auto; scrollbar-width: none; gap: 0; }
+  .pipeline::-webkit-scrollbar { display: none; }
+  .pipe-node { display: flex; align-items: center; gap: 7px; white-space: nowrap; font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim); flex-shrink: 0; }
+  .pipe-node.done { color: var(--green); }
+  .pipe-node.active { color: var(--amber); }
+  .pipe-node.active .pipe-dot { background: var(--amber); box-shadow: 0 0 10px rgba(200,136,42,0.6); }
+  .pipe-node.done .pipe-dot { background: var(--green); }
+  .pipe-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--border-lit); flex-shrink: 0; }
+  .pipe-sep { width: 28px; height: 1px; background: var(--border); margin: 0 8px; flex-shrink: 0; }
+
+  .section-label { font-size: 10px; letter-spacing: 0.22em; text-transform: uppercase; color: var(--text-dim); margin-bottom: 10px; display: flex; align-items: center; gap: 10px; }
+  .section-label::before { content: ''; display: block; width: 16px; height: 1px; background: var(--amber-soft); }
+
+  /* JSON input area */
+  .json-input-section { margin-bottom: 20px; }
+  .json-textarea {
+    width: 100%; background: var(--surface); border: 1px solid var(--border); border-radius: 1px;
+    color: var(--text-mid); font-family: 'JetBrains Mono', monospace; font-size: 11px;
+    padding: 16px; outline: none; resize: vertical; min-height: 120px; line-height: 1.6;
+    transition: border-color 0.2s;
+  }
+  .json-textarea:focus { border-color: var(--amber-soft); }
+  .json-textarea::placeholder { color: var(--text-dim); }
+
+  .city-display { font-family: 'Cormorant Garamond', serif; font-size: 28px; font-style: italic; color: var(--amber); margin-bottom: 8px; min-height: 36px; }
+
+  .btn-row { display: flex; gap: 10px; margin-top: 12px; flex-wrap: wrap; }
+  .btn-generate {
+    background: var(--amber); color: #08080a; border: none; border-radius: 1px;
+    font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500;
+    letter-spacing: 0.18em; text-transform: uppercase; padding: 12px 32px;
+    cursor: pointer; transition: background 0.2s, box-shadow 0.2s;
+  }
+  .btn-generate:hover:not(:disabled) { background: #d9992e; box-shadow: 0 0 24px rgba(200,136,42,0.35); }
+  .btn-generate:disabled { opacity: 0.35; cursor: not-allowed; }
+
+  .btn { background: transparent; border: 1px solid var(--border-lit); border-radius: 1px; color: var(--text-mid); font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; padding: 10px 18px; cursor: pointer; transition: all 0.2s; }
+  .btn:hover { border-color: var(--amber-soft); color: var(--amber); }
+  .btn.green { border-color: var(--green); color: var(--green); }
+  .btn.green:hover { background: var(--green-glow); }
+
+  .status { display: flex; align-items: center; gap: 10px; padding: 11px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 1px; margin-bottom: 28px; font-size: 11px; color: var(--text-dim); min-height: 42px; transition: all 0.3s; }
+  .status.running { border-color: var(--amber-soft); color: var(--amber); }
+  .status.done { border-color: var(--green); color: var(--green); }
+  .status.error { border-color: var(--red); color: #c86060; }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+  .status.running .status-dot { animation: blink 1.1s ease-in-out infinite; }
+  @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.15} }
+
+  /* Scenes output */
+  .scenes-wrap { display: none; }
+  .scenes-wrap.visible { display: block; }
+
+  .scenes-grid { display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; }
+
+  .scene-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 1px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .scene-card:hover { border-color: var(--border-lit); }
+  .scene-card.selected { border-color: var(--amber); }
+  .scene-card.approved { border-color: var(--green); }
+
+  .scene-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 18px; background: var(--surface2); gap: 12px;
+  }
+  .scene-num { font-size: 10px; letter-spacing: 0.2em; color: var(--amber); text-transform: uppercase; flex-shrink: 0; }
+  .scene-title { font-family: 'Cormorant Garamond', serif; font-size: 17px; font-style: italic; flex: 1; }
+  .scene-perspective { font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; flex-shrink: 0; }
+  .scene-select-btn {
+    background: transparent; border: 1px solid var(--border-lit); border-radius: 1px;
+    color: var(--text-dim); font-family: 'JetBrains Mono', monospace; font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase; padding: 5px 12px; cursor: pointer;
+    transition: all 0.2s; flex-shrink: 0;
+  }
+  .scene-card.selected .scene-select-btn { background: var(--amber); color: #08080a; border-color: var(--amber); }
+  .scene-card.approved .scene-select-btn { background: var(--green); color: #08080a; border-color: var(--green); }
+
+  .scene-body { padding: 16px 18px; display: none; }
+  .scene-card.open .scene-body { display: block; }
+
+  .scene-field { margin-bottom: 12px; }
+  .scene-field-label { font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--amber-soft); margin-bottom: 4px; }
+  .scene-field-value { font-size: 11.5px; color: var(--text-mid); line-height: 1.7; }
+
+  /* Gate */
+  .gate { margin-top: 20px; padding: 22px 24px; background: var(--surface2); border: 1px solid var(--border-lit); border-radius: 1px; display: none; }
+  .gate.visible { display: block; }
+  .gate-heading { font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase; color: var(--amber); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .gate-heading::before { content: '▶'; font-size: 7px; }
+  .gate-body { color: var(--text-mid); font-size: 11px; line-height: 1.8; margin-bottom: 18px; }
+  .gate-body strong { color: var(--text); font-weight: 400; }
+  .gate-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .approved-banner { display: none; align-items: center; gap: 10px; padding: 13px 18px; background: var(--green-glow); border: 1px solid var(--green); border-radius: 1px; margin-top: 16px; font-size: 11px; color: var(--green); }
+  .approved-banner.visible { display: flex; }
+  .approved-next { margin-left: auto; background: var(--green); color: #08080a; border: none; font-family: 'JetBrains Mono', monospace; font-size: 10px; font-weight: 500; letter-spacing: 0.15em; text-transform: uppercase; padding: 8px 18px; cursor: pointer; border-radius: 1px; }
+
+  .divider { height: 1px; background: var(--border); margin: 44px 0; }
+  .footer { display: flex; justify-content: space-between; align-items: center; color: var(--text-dim); font-size: 10px; letter-spacing: 0.1em; flex-wrap: wrap; gap: 8px; }
+
+  .toast { position: fixed; bottom: 32px; right: 32px; background: var(--surface2); border: 1px solid var(--green); color: var(--green); font-size: 11px; letter-spacing: 0.1em; padding: 10px 20px; border-radius: 1px; opacity: 0; transform: translateY(8px); transition: opacity 0.2s, transform 0.2s; pointer-events: none; z-index: 100; }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  @media (max-width: 600px) {
+    .wrap { padding: 28px 16px 60px; }
+    .title-block { flex-direction: column; }
+  }
+</style>
+</head>
+<body>
+<div class="ambient"></div>
+<div class="wrap">
+
+  <header class="header">
+    <div class="breadcrumb">Lo-Fi City Ambience <span>/</span> Production Pipeline <span>/</span> Agent 2</div>
+    <div class="title-block">
+      <h1>Scene <em>Generator</em></h1>
+      <div class="header-meta">Agent 02 of 08<br>Cinematic Scene Concepts<br>10–15 Scenes Output<br><span style="color:var(--amber)">Gate Required</span></div>
+    </div>
+  </header>
+
+  <div class="pipeline">
+    <div class="pipe-node done"><div class="pipe-dot"></div>01 Research</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node active"><div class="pipe-dot"></div>02 Scenes</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>03 Image Prompt</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>Gate: Foundation</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>04 Variations</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>05 Animation</div>
+    <div class="pipe-sep"></div>
+    <div class="pipe-node"><div class="pipe-dot"></div>06 10hr Video</div>
+  </div>
+
+  <!-- API Key -->
+  <div style="margin-bottom:20px;padding:16px 20px;background:var(--surface);border:1px solid var(--border);border-radius:1px;">
+    <div class="section-label">Anthropic API Key <span id="apikeySaved" style="color:var(--green);display:none;margin-left:8px;">✓ Saved</span></div>
+    <div style="display:flex;gap:10px;margin-top:10px;">
+      <input type="password" id="apikeyInput" placeholder="sk-ant-..." style="flex:1;background:var(--bg);border:1px solid var(--border);border-radius:1px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:12px;padding:10px 14px;outline:none;" />
+      <button class="btn" onclick="saveApiKey()">Save Key</button>
+    </div>
+  </div>
+
+  <!-- JSON Input -->
+  <div class="json-input-section">
+    <div class="section-label">Paste Approved City JSON from Agent 1</div>
+    <div class="city-display" id="cityDisplay">—</div>
+    <textarea class="json-textarea" id="jsonInput" placeholder='Paste the approved city JSON from Agent 1 here...' oninput="parseCity()"></textarea>
+    <div class="btn-row">
+      <button class="btn-generate" id="generateBtn" onclick="generateScenes()">Generate Scenes</button>
+    </div>
+  </div>
+
+  <div class="status" id="statusBar">
+    <div class="status-dot"></div>
+    <span id="statusText">Ready — paste city JSON and hit Generate Scenes</span>
+  </div>
+
+  <!-- Scenes Output -->
+  <div class="scenes-wrap" id="scenesWrap">
+    <div class="section-label" style="margin-bottom:16px;">Select scenes to proceed — click to expand, tick to select</div>
+    <div class="scenes-grid" id="scenesGrid"></div>
+
+    <div class="gate visible" id="gate">
+      <div class="gate-heading">Approval Gate — Agent 2</div>
+      <div class="gate-body">
+        Select the scenes you want to produce by clicking <strong>Select</strong> on each card.<br>
+        At least one scene must be selected. Selected scenes pass to <strong>Agent 3 — Image Prompt Builder</strong>.
+      </div>
+      <div class="gate-actions">
+        <button class="btn green" onclick="approveScenes()">✓ Approve Selected & Proceed to Agent 3</button>
+        <button class="btn" onclick="generateScenes()">↺ Regenerate All Scenes</button>
+      </div>
+    </div>
+
+    <div class="approved-banner" id="approvedBanner">
+      <span>✓</span>
+      <span id="approvedText">Scenes approved</span>
+      <button class="approved-next" onclick="goToAgent3()">Open Agent 3 →</button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <footer class="footer">
+    <span>Lo-Fi City Ambience · Production System · Agent 02</span>
+    <span>github.com/MelThomo/lofi-city-agents</span>
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+let currentCity = '';
+let currentJSON = null;
+let scenes = [];
+let selectedScenes = new Set();
+
+// API Key
+function loadApiKey() {
+  try {
+    const saved = sessionStorage.getItem('lofi_anthropic_key');
+    if (saved) { document.getElementById('apikeyInput').value = saved; document.getElementById('apikeySaved').style.display = 'inline'; }
+  } catch(e) {}
+}
+function saveApiKey() {
+  const key = document.getElementById('apikeyInput').value.trim();
+  if (!key.startsWith('sk-ant-')) { alert('Key should start with sk-ant-'); return; }
+  try { sessionStorage.setItem('lofi_anthropic_key', key); document.getElementById('apikeySaved').style.display = 'inline'; showToast('API key saved'); } catch(e) {}
+}
+function getApiKey() {
+  try { return sessionStorage.getItem('lofi_anthropic_key') || document.getElementById('apikeyInput').value.trim(); } catch(e) { return document.getElementById('apikeyInput').value.trim(); }
+}
+loadApiKey();
+
+// Parse city from JSON input
+function parseCity() {
+  const raw = document.getElementById('jsonInput').value.trim();
+  if (!raw) { document.getElementById('cityDisplay').textContent = '—'; currentJSON = null; return; }
+  try {
+    const data = JSON.parse(raw);
+    currentCity = data.city || 'Unknown';
+    currentJSON = data;
+    document.getElementById('cityDisplay').textContent = `${data.city}, ${data.country}`;
+  } catch(e) { document.getElementById('cityDisplay').textContent = 'Invalid JSON'; currentJSON = null; }
+}
+
+// Generate scenes
+async function generateScenes() {
+  if (!currentJSON) { setStatus('error', 'Please paste valid city JSON first'); return; }
+  const apiKey = getApiKey();
+  if (!apiKey || !apiKey.startsWith('sk-ant-')) { setStatus('error', 'Please enter your Anthropic API key first'); return; }
+
+  setStatus('running', `Generating cinematic scene concepts for ${currentCity}…`);
+  document.getElementById('generateBtn').disabled = true;
+  document.getElementById('generateBtn').textContent = 'Generating…';
+  document.getElementById('scenesWrap').classList.remove('visible');
+  selectedScenes.clear();
+
+  const systemPrompt = `You are a cinematic scene generator for a YouTube ambience and meditation channel called "Lo-Fi City Ambience". 
+Transform the city intelligence JSON into highly visual, immersive scene concepts for long-form ambience videos.
+
+Generate exactly 12 unique scene concepts. Output ONLY a valid JSON array — no preamble, no markdown, no backticks.
+
+Each scene object must have these exact fields:
+{
+  "scene_number": 1,
+  "title": "evocative scene title",
+  "location": "specific real location in the city",
+  "perspective": "one of: elevated/interior/street/water/boat/nature",
+  "time_weather": "time of day + weather condition",
+  "visual_description": "2-3 sentence rich visual description for AI image generation — specific textures, colors, lighting, mood",
+  "motion_elements": "3-4 motion elements for animation — rain, flames, breathing cat, etc",
+  "sound_design": "ambient sounds for this scene",
+  "cat_note": "where the cat is sleeping and what position"
+}
+
+RULES:
+- Scenes must be cinematic, calm, and immersive
+- Every scene must feel like a real, specific place in this exact city
+- Include variety: min 2 elevated, min 2 interior, min 1 water/boat, min 1 street, min 1 nature
+- Focus on night, rain, storm, fog, or soft lighting — avoid bright daytime
+- Cat is ALWAYS sleeping in all scene descriptions
+- Use landmarks, architecture, and cultural details from the JSON
+- Output ONLY the JSON array`;
+
+  const userPrompt = `Generate 12 cinematic scene concepts for this city:\n\n${JSON.stringify(currentJSON, null, 2)}`;
+
+  try {
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': getApiKey(),
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 4000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    if (!response.ok) { const err = await response.json(); throw new Error(err.error?.message || `API error ${response.status}`); }
+    const data = await response.json();
+    const raw = data.content.map(b => b.text || '').join('');
+    const cleaned = raw.replace(/```json\n?/g, '').replace(/```\n?/g, '').trim();
+    scenes = JSON.parse(cleaned);
+    renderScenes(scenes);
+    setStatus('done', `✓ ${scenes.length} scenes generated for ${currentCity} — select scenes and approve below`);
+    document.getElementById('scenesWrap').classList.add('visible');
+    document.getElementById('gate').classList.add('visible');
+    document.getElementById('approvedBanner').classList.remove('visible');
+    setTimeout(() => document.getElementById('scenesWrap').scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+  } catch(err) {
+    setStatus('error', `Error: ${err.message}`);
+  } finally {
+    document.getElementById('generateBtn').disabled = false;
+    document.getElementById('generateBtn').textContent = 'Generate Scenes';
+  }
+}
+
+function renderScenes(scenes) {
+  const grid = document.getElementById('scenesGrid');
+  grid.innerHTML = '';
+  scenes.forEach((scene, i) => {
+    const card = document.createElement('div');
+    card.className = 'scene-card';
+    card.id = `scene-${i}`;
+    card.innerHTML = `
+      <div class="scene-header" onclick="toggleCard(${i})">
+        <div class="scene-num">Scene ${String(scene.scene_number).padStart(2,'0')}</div>
+        <div class="scene-title">${scene.title}</div>
+        <div class="scene-perspective">${scene.perspective?.toUpperCase()}</div>
+        <button class="scene-select-btn" onclick="event.stopPropagation();toggleSelect(${i})">Select</button>
+      </div>
+      <div class="scene-body">
+        <div class="scene-field"><div class="scene-field-label">Location</div><div class="scene-field-value">${scene.location}</div></div>
+        <div class="scene-field"><div class="scene-field-label">Time & Weather</div><div class="scene-field-value">${scene.time_weather}</div></div>
+        <div class="scene-field"><div class="scene-field-label">Visual Description</div><div class="scene-field-value">${scene.visual_description}</div></div>
+        <div class="scene-field"><div class="scene-field-label">Motion Elements</div><div class="scene-field-value">${scene.motion_elements}</div></div>
+        <div class="scene-field"><div class="scene-field-label">Sound Design</div><div class="scene-field-value">${scene.sound_design}</div></div>
+        <div class="scene-field"><div class="scene-field-label">Cat Position</div><div class="scene-field-value">${scene.cat_note}</div></div>
+      </div>`;
+    grid.appendChild(card);
+  });
+}
+
+function toggleCard(i) {
+  const card = document.getElementById(`scene-${i}`);
+  card.classList.toggle('open');
+}
+
+function toggleSelect(i) {
+  const card = document.getElementById(`scene-${i}`);
+  if (selectedScenes.has(i)) {
+    selectedScenes.delete(i);
+    card.classList.remove('selected');
+  } else {
+    selectedScenes.add(i);
+    card.classList.add('selected');
+  }
+}
+
+function approveScenes() {
+  if (selectedScenes.size === 0) { showToast('Select at least one scene first'); return; }
+  const selected = [...selectedScenes].map(i => scenes[i]);
+  try {
+    sessionStorage.setItem(`lofi_scenes_${currentCity.toLowerCase().replace(/\s+/g,'_')}`, JSON.stringify({ city: currentCity, approved: true, timestamp: new Date().toISOString(), scenes: selected }));
+  } catch(e) {}
+  document.getElementById('gate').style.display = 'none';
+  const banner = document.getElementById('approvedBanner');
+  banner.classList.add('visible');
+  document.getElementById('approvedText').textContent = `${selectedScenes.size} scene${selectedScenes.size>1?'s':''} approved for ${currentCity} — ready for Agent 3`;
+  setStatus('done', `✓ ${selectedScenes.size} scenes approved — proceed to Agent 3: Image Prompt Builder`);
+  selectedScenes.forEach(i => { document.getElementById(`scene-${i}`).classList.add('approved'); });
+}
+
+function goToAgent3() {
+  window.location.href = `../agent3-image-prompt/index.html?city=${encodeURIComponent(currentCity)}`;
+}
+
+function setStatus(type, text) {
+  const bar = document.getElementById('statusBar');
+  bar.className = 'status ' + type;
+  document.getElementById('statusText').textContent = text;
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Pre-fill from URL param if coming from Agent 1
+const urlParams = new URLSearchParams(window.location.search);
+const cityParam = urlParams.get('city');
+if (cityParam) document.getElementById('cityDisplay').textContent = cityParam;
+</script>
+</body>
+</html>
