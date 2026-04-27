@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Visual Composer — Lo-Fi City Agents</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Playfair+Display:ital@1&display=swap');
+
+  :root {
+    --bg: #0a0a0a;
+    --surface: #111111;
+    --surface2: #181818;
+    --border: #2a2a2a;
+    --border-bright: #3a3a3a;
+    --amber: #c8922a;
+    --amber-bright: #e0a832;
+    --amber-dim: #7a5518;
+    --text: #d4d0c8;
+    --text-dim: #6b6760;
+    --text-muted: #3d3b38;
+    --green: #4a7c59;
+    --green-bright: #5a9c6e;
+    --mono: 'Space Mono', monospace;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  .pipeline-nav {
+    border-bottom: 1px solid var(--border);
+    padding: 12px 40px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .pipeline-nav::-webkit-scrollbar { display: none; }
+  .nav-step {
+    display: flex; align-items: center; gap: 8px;
+    padding: 6px 16px; font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; color: var(--text-dim); white-space: nowrap;
+    border: 1px solid transparent;
+  }
+  .nav-step.active { color: var(--text); border-color: var(--border-bright); background: var(--surface); }
+  .nav-step .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); }
+  .nav-step.active .dot { background: var(--amber); }
+  .nav-sep { display: flex; align-items: center; color: var(--text-muted); padding: 0 4px; font-size: 10px; }
+
+  .header {
+    padding: 32px 40px 24px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+  }
+  .header-breadcrumb { font-size: 10px; letter-spacing: 0.15em; color: var(--text-dim); text-transform: uppercase; margin-bottom: 10px; }
+  .header-title { font-size: 42px; font-weight: 700; letter-spacing: -0.01em; line-height: 1; }
+  .header-title em { font-family: 'Playfair Display', serif; font-style: italic; color: var(--amber); font-weight: 400; }
+  .header-meta { text-align: right; font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; line-height: 2; }
+  .header-meta strong { color: var(--amber); font-weight: 700; }
+
+  .main {
+    padding: 0 40px 60px;
+    display: grid;
+    grid-template-columns: 1fr 420px;
+    gap: 24px;
+    max-width: 1400px;
+  }
+
+  .panel { border: 1px solid var(--border); background: var(--surface); }
+  .panel-header {
+    padding: 12px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 10px;
+    font-size: 10px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--text-dim);
+  }
+  .panel-header .dash { width: 20px; height: 1px; background: var(--amber); flex-shrink: 0; }
+  .panel-body { padding: 20px; }
+
+  .api-row { display: flex; gap: 8px; }
+  .api-input {
+    flex: 1; background: var(--bg); border: 1px solid var(--border-bright);
+    color: var(--text); font-family: var(--mono); font-size: 12px;
+    padding: 10px 14px; outline: none; letter-spacing: 0.05em;
+  }
+  .api-input:focus { border-color: var(--amber-dim); }
+
+  .btn {
+    background: transparent; border: 1px solid var(--amber); color: var(--amber);
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    text-transform: uppercase; padding: 10px 16px; cursor: pointer;
+    white-space: nowrap; transition: all 0.15s;
+  }
+  .btn:hover { background: var(--amber); color: var(--bg); }
+  .btn:disabled { opacity: 0.4; cursor: default; pointer-events: none; }
+  .btn.primary { background: var(--amber); color: var(--bg); font-weight: 700; }
+  .btn.primary:hover { background: var(--amber-bright); border-color: var(--amber-bright); }
+  .btn.ghost { border-color: var(--border-bright); color: var(--text-dim); }
+  .btn.ghost:hover { border-color: var(--text-dim); color: var(--text); background: transparent; }
+
+  .saved-tag {
+    font-size: 10px; color: var(--green-bright); letter-spacing: 0.1em;
+    display: none; align-items: center; gap: 4px;
+  }
+  .saved-tag.show { display: flex; }
+
+  .json-area {
+    width: 100%; background: var(--bg); border: 1px solid var(--border-bright);
+    color: var(--text); font-family: var(--mono); font-size: 11px;
+    padding: 14px; resize: vertical; min-height: 120px; outline: none; line-height: 1.5;
+  }
+  .json-area:focus { border-color: var(--amber-dim); }
+
+  .city-tag {
+    font-family: 'Playfair Display', serif; font-style: italic;
+    color: var(--amber); font-size: 22px; margin: 0 0 16px;
+  }
+
+  /* ── CHECKLIST ── */
+  .checklist-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px;
+  }
+  .category-block { min-width: 0; }
+  .category-label {
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-dim); margin-bottom: 8px; padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .category-sop-note {
+    font-size: 9px; color: var(--amber-dim); letter-spacing: 0.08em;
+    margin-bottom: 6px; font-style: italic;
+  }
+
+  .check-item {
+    display: flex; align-items: flex-start; gap: 8px;
+    padding: 4px 0; cursor: pointer; user-select: none;
+    transition: color 0.1s; line-height: 1.4;
+  }
+  .check-item:hover { color: var(--amber-bright); }
+  .check-item input[type="checkbox"] {
+    appearance: none; width: 13px; height: 13px; min-width: 13px;
+    border: 1px solid var(--border-bright); background: var(--bg);
+    cursor: pointer; position: relative; transition: all 0.1s; margin-top: 2px;
+  }
+  .check-item input[type="checkbox"]:checked { background: var(--amber); border-color: var(--amber); }
+  .check-item input[type="checkbox"]:checked::after {
+    content: ''; position: absolute; left: 3px; top: 1px;
+    width: 5px; height: 8px; border: 2px solid var(--bg);
+    border-top: none; border-left: none; transform: rotate(45deg);
+  }
+  .check-item.locked { color: var(--text-dim); cursor: default; }
+  .check-item.locked input[type="checkbox"] {
+    background: var(--amber-dim); border-color: var(--amber-dim); cursor: default;
+  }
+  .check-item.locked input[type="checkbox"]:checked::after { border-color: var(--bg); }
+  .item-text { flex: 1; font-size: 12px; }
+  .item-note { font-size: 10px; color: var(--text-muted); display: block; line-height: 1.3; }
+  .lock-badge {
+    font-size: 8px; color: var(--amber-dim); letter-spacing: 0.1em;
+    border: 1px solid var(--amber-dim); padding: 1px 4px; margin-left: auto;
+    flex-shrink: 0; margin-top: 2px;
+  }
+
+  .checklist-actions {
+    display: flex; gap: 8px; margin-top: 20px;
+    padding-top: 16px; border-top: 1px solid var(--border);
+  }
+  .selection-count { font-size: 10px; color: var(--text-dim); margin-left: auto; }
+  .selection-count span { color: var(--amber); }
+
+  /* ── RIGHT ── */
+  .right-col { display: flex; flex-direction: column; gap: 16px; }
+
+  .status-bar {
+    border: 1px solid var(--border); padding: 10px 16px;
+    font-size: 11px; display: flex; align-items: center; gap: 8px; min-height: 40px;
+  }
+  .status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--text-muted); flex-shrink: 0; }
+  .status-dot.active { background: var(--amber); }
+  .status-dot.ok { background: var(--green-bright); }
+  .status-text { color: var(--text-dim); flex: 1; }
+
+  .spinner-wrap { display: none; align-items: center; gap: 6px; color: var(--amber); font-size: 10px; }
+  .spinner-wrap.show { display: flex; }
+  .spinner { width: 10px; height: 10px; border: 2px solid var(--amber-dim); border-top-color: var(--amber); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .prompt-preview {
+    font-size: 12px; line-height: 1.8; color: var(--text);
+    min-height: 220px; white-space: pre-wrap; word-break: break-word;
+  }
+  .prompt-placeholder { color: var(--text-muted); font-style: italic; }
+
+  .negative-box {
+    background: var(--bg); border: 1px solid var(--border);
+    padding: 12px 14px; font-size: 11px; color: var(--amber-dim); line-height: 1.6;
+  }
+  .negative-label { font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+
+  .copy-row { display: flex; gap: 8px; }
+  .copy-row .btn { flex: 1; }
+
+  .empty-state {
+    padding: 40px 20px; text-align: center;
+    color: var(--text-muted); font-size: 11px; letter-spacing: 0.08em;
+  }
+
+
+  /* ── TIME OF DAY TOGGLE ── */
+  .tod-bar {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 20px; padding: 12px 16px;
+    border: 1px solid var(--border); background: var(--surface2);
+  }
+  .tod-label {
+    font-size: 10px; letter-spacing: 0.15em; text-transform: uppercase;
+    color: var(--text-dim); white-space: nowrap; flex-shrink: 0;
+  }
+  .tod-options { display: flex; gap: 6px; }
+  .tod-btn {
+    background: transparent; border: 1px solid var(--border-bright);
+    color: var(--text-dim); font-family: var(--mono); font-size: 10px;
+    letter-spacing: 0.1em; text-transform: uppercase;
+    padding: 7px 14px; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tod-btn:hover { border-color: var(--amber-dim); color: var(--text); }
+  .tod-btn.active { background: var(--surface); border-color: var(--amber); color: var(--amber); }
+  .tod-icon { font-size: 13px; }
+  .tod-note { font-size: 10px; color: var(--text-muted); margin-left: auto; letter-spacing: 0.05em; }
+
+  @media (max-width: 1100px) {
+    .main { grid-template-columns: 1fr; }
+    .checklist-grid { grid-template-columns: 1fr 1fr; }
+  }
+  @media (max-width: 640px) {
+    .main { padding: 0 16px 40px; }
+    .header { padding: 20px 16px; }
+    .pipeline-nav { padding: 10px 16px; }
+    .checklist-grid { grid-template-columns: 1fr; }
+    .header-title { font-size: 28px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="pipeline-nav">
+  <div class="nav-step"><div class="dot"></div>01 Research</div>
+  <div class="nav-sep">→</div>
+  <div class="nav-step active"><div class="dot"></div>02 Visual Composer</div>
+  <div class="nav-sep">→</div>
+  <div class="nav-step"><div class="dot"></div>Image Prompt</div>
+  <div class="nav-sep">→</div>
+  <div class="nav-step"><div class="dot"></div>Leonardo.ai</div>
+</nav>
+
+<div class="header">
+  <div>
+    <div class="header-breadcrumb">Lo-Fi City Ambience / Production Pipeline / Agent 2</div>
+    <h1 class="header-title">Visual <em>Composer</em></h1>
+  </div>
+  <div class="header-meta">
+    Agent 02 of 03<br>
+    Tick What You Want<br>
+    SOP Compliant<br>
+    <strong>Leonardo Ready</strong>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- LEFT -->
+  <div class="left-col">
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-header"><div class="dash"></div>Anthropic API Key <span class="saved-tag" id="savedTag">✓ Saved</span></div>
+      <div class="panel-body">
+        <div class="api-row">
+          <input type="password" class="api-input" id="apiKey" placeholder="sk-ant-..." />
+          <button class="btn" onclick="saveKey()">Save Key</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:16px">
+      <div class="panel-header"><div class="dash"></div>Research JSON — From Agent 1</div>
+      <div class="panel-body">
+        <textarea class="json-area" id="jsonInput" placeholder='Paste Agent 1 JSON here...'></textarea>
+        <div style="display:flex;gap:8px;margin-top:10px">
+          <button class="btn primary" onclick="parseJSON()">Load Research →</button>
+          <button class="btn ghost" onclick="loadExample()">Load Singapore Example</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="dash"></div>Compose Your Scene
+        <div class="selection-count" id="selCount"><span>0</span> selected</div>
+      </div>
+      <div class="panel-body">
+      <div id="todBar" class="tod-bar" style="display:none">
+        <span class="tod-label">Time of Day</span>
+        <div class="tod-options">
+          <button class="tod-btn active" onclick="setTimeOfDay('night')" id="tod-night">
+            <span class="tod-icon">🌙</span> Night
+          </button>
+          <button class="tod-btn" onclick="setTimeOfDay('day')" id="tod-day">
+            <span class="tod-icon">☀️</span> Day
+          </button>
+        </div>
+        <span class="tod-note" id="todNote">Storm clouds SOP active · Night mode</span>
+      </div>
+      <div id="checklistBody">
+        <div class="empty-state">Load research JSON above to build your scene checklist</div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- RIGHT -->
+  <div class="right-col">
+
+    <div class="status-bar">
+      <div class="status-dot" id="statusDot"></div>
+      <span class="status-text" id="statusText">Waiting for research JSON</span>
+      <div class="spinner-wrap" id="spinnerWrap"><div class="spinner"></div>Building...</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="dash"></div>Live Prompt Preview</div>
+      <div class="panel-body">
+        <div class="prompt-preview" id="promptPreview">
+          <span class="prompt-placeholder">Tick elements to build your prompt in real time...</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="dash"></div>Negative Prompt — SOP Locked</div>
+      <div class="panel-body">
+        <div class="negative-box">
+          <div class="negative-label">Always excluded</div>
+          standing cat, cat upright, cat walking, split screen, letterbox format, cramped interior, window frame dominating, floating furniture, blurry, low quality, cartoon, anime, illustration, distorted perspective, surreal
+        </div>
+      </div>
+    </div>
+
+    <div class="copy-row">
+      <button class="btn primary" onclick="copyPrompt()" id="copyPromptBtn" disabled>Copy Prompt</button>
+      <button class="btn ghost" onclick="copyNegative()">Copy Negative</button>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header"><div class="dash"></div>Leonardo Settings</div>
+      <div class="panel-body" style="font-size:11px;color:var(--text-dim);line-height:2">
+        Model: Leonardo Phoenix &middot; Settings: 16:9 aspect ratio, high detail, cinematic style
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const NEGATIVE = "standing cat, cat upright, cat walking, split screen, letterbox format, cramped interior, window frame dominating, floating furniture, blurry, low quality, cartoon, anime, illustration, distorted perspective, surreal";
+
+// ── STATE ──
+let state = {
+  city: '', country: '', setting: '',
+  rawJSON: null,
+  timeOfDay: 'night',
+  categories: [], // [{key, label, sopNote, items:[{id,label,note,locked,checked}]}]
+};
+
+let promptDebounce = null;
+
+// ── API KEY ──
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (!k) return;
+  localStorage.setItem('anthropic_key', k);
+  showSaved();
+}
+function showSaved() {
+  const t = document.getElementById('savedTag');
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2000);
+}
+
+window.addEventListener('load', () => {
+  const k = localStorage.getItem('anthropic_key');
+  if (k) { document.getElementById('apiKey').value = k; showSaved(); }
+  const city = new URLSearchParams(window.location.search).get('city');
+  if (city) setStatus('', `City param: ${city} — paste JSON to continue`);
+});
+
+// ── EXAMPLE (Singapore) ──
+function loadExample() {
+  const sg = {"city":"Singapore","country":"Singapore","folder_name":"SG-Singapore","status":"research_complete","production_card":{"anchor":{"landmark":"Marina Bay Sands with its distinctive boat-shaped SkyPark","secondary_landmark":"Singapore Flyer observation wheel","nighttime_color":"golden yellow and blue LED illumination cascading down the towers","window_fill":"65%"},"window_style":"modern floor-to-ceiling glass panels typical of HDB flats or condominiums","table":{"beverage":"traditional kopi in ceramic cup and saucer","snack":"kaya toast on small white plate","constant":"open book or stacked books — always present"},"soul":{"pet":"British Shorthair cat — ALWAYS sleeping curled up","hobby_item":"vintage film camera representing Singapore's photography culture"},"street":{"vehicle":"distinctive red and white SBS Transit bus","atmospheric_detail":"tropical evening haze with warm humid air shimmer"},"sop_keywords":{"perspective":"floor level, modern apartment style, Marina Bay facing view","landmark_scale":"always use: towering, majestic, dominant anchor","forbidden":["split-screen","floating furniture","cat standing","roads pointing at building"],"cat_rule":"ALWAYS sleeping/curled in foundation image."}},"identity":{"core_vibe":["Tropical cosmopolitan fusion","Garden city serenity","Hawker center soul","Skyline poetry in glass","Monsoon rhythm tranquility"],"emotional_triggers":["Kopi steam rising in humid morning air","Rain drumming on zinc awnings","Air-con hum mixing with cicada chorus","Frangipani scent carried on evening breeze"]},"landmarks":{"man_made":[{"name":"Marina Bay Sands","type":"integrated resort with rooftop infinity pool","recognition":"high","notes":"three curved towers supporting boat-shaped SkyPark, golden LED facade lighting"},{"name":"Singapore Flyer","type":"observation wheel","recognition":"high","notes":"165-meter giant wheel with white LED rim lighting, slow rotation visible"},{"name":"Merlion","type":"mythical creature statue fountain","recognition":"high","notes":"white stone lion-fish hybrid, water spouting from mouth"}],"natural":[{"name":"Gardens by the Bay Supertrees","type":"vertical garden structures","recognition":"high","notes":"towering metal tree-like structures covered in tropical plants, purple and blue LED light shows"},{"name":"Singapore River","type":"urban waterway","recognition":"medium","notes":"calm brown water reflecting city lights, traditional bumboats"}]},"weather_patterns":{"visual_effects":["Dramatic afternoon thunderclouds building","Steam rising from wet pavement after rain","Hazy tropical atmosphere filtering sunlight","Sudden downpours creating water curtains","Golden hour light diffused through humidity","Night mist rising from Singapore River"]},"lighting_style":{"night":["Marina Bay Sands golden tower illumination","Colorful LED displays on commercial buildings","Warm yellow HDB corridor lighting","Neon signs in Chinese, Malay, and Tamil scripts","Supertree Grove purple and blue light shows"]},"iconic_objects":["Kopi cups with saucers","Rattan chairs","Orchid arrangements","Tiger Balm tins","Pandan leaves","Five-foot-way pillars"],"micro_details":["Gecko chirping sounds at dusk","Condensation dripping from air-con units","Bougainvillea spilling over balcony railings","Potted plants on HDB corridors"],"animal_culture":{"scene_pet":"British Shorthair cat curled up sleeping on cushioned rattan chair","cultural_animals":["House geckos on walls","Koi fish in temple ponds","Mynas and sparrows"]},"vehicle_culture":{"scene_vehicle":"red and white SBS Transit double-decker bus","iconic":["Grab cars with green decals","Traditional trishaw bicycles","Yellow taxi cabs"]}};
+  document.getElementById('jsonInput').value = JSON.stringify(sg, null, 2);
+  parseJSON();
+}
+
+// ── PARSE JSON — handles both Cairo (simple arrays) and Singapore (rich objects) formats ──
+function parseJSON() {
+  let raw;
+  try { raw = JSON.parse(document.getElementById('jsonInput').value.trim()); }
+  catch(e) { setStatus('error', 'Invalid JSON — check formatting'); return; }
+
+  state.rawJSON = raw;
+  state.city = raw.city || raw.folder_name || 'Unknown';
+  state.country = raw.country || '';
+  state.categories = [];
+
+  const pc = raw.production_card || {};
+
+  // ── LANDMARKS ──
+  const landmarks = [];
+
+  // Format A: anchor object (Singapore)
+  if (pc.anchor?.landmark) {
+    landmarks.push({ id: 'anc_primary', label: cleanLandmarkName(pc.anchor.landmark), note: pc.anchor.nighttime_color || '', locked: false });
+    if (pc.anchor.secondary_landmark) {
+      landmarks.push({ id: 'anc_secondary', label: cleanLandmarkName(pc.anchor.secondary_landmark), note: '', locked: false });
+    }
+  }
+  // Format B: landmarks.man_made + landmarks.natural (Singapore extended)
+  if (raw.landmarks) {
+    const all = [...(raw.landmarks.man_made||[]), ...(raw.landmarks.natural||[])];
+    all.forEach((lm, i) => {
+      const id = `lm_${i}`;
+      // Don't duplicate if already added from anchor
+      const already = landmarks.some(l => l.label.toLowerCase().includes(lm.name.toLowerCase().substring(0,8)));
+      if (!already) landmarks.push({ id, label: lm.name, note: lm.type || '', locked: false });
+    });
+  }
+  // Format C: simple array (Cairo)
+  if (pc.landmarks && Array.isArray(pc.landmarks)) {
+    pc.landmarks.forEach((lm, i) => landmarks.push({ id: `lmc_${i}`, label: lm, note: '', locked: false }));
+  }
+
+  if (landmarks.length) {
+    landmarks[0].checked = true; // default first checked
+    addCategory('landmarks', 'Landmarks', null, landmarks);
+  }
+
+  // ── INTERIOR / WINDOW ──
+  const interior = [];
+  if (pc.window_style) interior.push({ id: 'win_style', label: pc.window_style.split(' ').slice(0,5).join(' ') + '...', note: pc.window_style, locked: false });
+  // Format C interior_elements array
+  if (pc.interior_elements && Array.isArray(pc.interior_elements)) {
+    pc.interior_elements.forEach((el, i) => interior.push({ id: `int_${i}`, label: el, note: '', locked: false }));
+  }
+  if (interior.length) addCategory('interior', 'Interior Elements', null, interior, 2);
+
+  // ── TABLE / OBJECTS ──
+  const tableItems = [];
+  if (pc.table) {
+    if (pc.table.beverage) tableItems.push({ id: 'tbl_bev', label: pc.table.beverage, note: '', locked: false });
+    if (pc.table.snack) tableItems.push({ id: 'tbl_snk', label: pc.table.snack, note: '', locked: false });
+    if (pc.table.constant) tableItems.push({ id: 'tbl_const', label: pc.table.constant, note: 'always present', locked: true });
+  }
+  // Format C table_items array
+  if (pc.table_items && Array.isArray(pc.table_items)) {
+    pc.table_items.forEach((t, i) => tableItems.push({ id: `ti_${i}`, label: t, note: '', locked: false }));
+  }
+  // Iconic objects
+  if (raw.iconic_objects && Array.isArray(raw.iconic_objects)) {
+    raw.iconic_objects.slice(0,4).forEach((o, i) => tableItems.push({ id: `ico_${i}`, label: o, note: '', locked: false }));
+  }
+  if (tableItems.length) addCategory('table', 'Table & Objects', null, tableItems, 3);
+
+  // ── SOUL / HOBBY ──
+  const soulItems = [];
+  if (pc.soul?.hobby_item) soulItems.push({ id: 'soul_hobby', label: pc.soul.hobby_item, note: '', locked: false });
+  if (pc.street?.vehicle) soulItems.push({ id: 'soul_veh', label: pc.street.vehicle, note: 'visible through window', locked: false });
+  if (pc.street?.atmospheric_detail) soulItems.push({ id: 'soul_atm', label: pc.street.atmospheric_detail, note: '', locked: false });
+  if (raw.vehicle_culture?.scene_vehicle) {
+    const already = soulItems.some(s => s.label.includes(raw.vehicle_culture.scene_vehicle.substring(0,10)));
+    if (!already) soulItems.push({ id: 'soul_veh2', label: raw.vehicle_culture.scene_vehicle, note: '', locked: false });
+  }
+  if (soulItems.length) addCategory('soul', 'Soul & Detail', null, soulItems, 1);
+
+  // ── CAT POSITION ── SOP
+  const catItems = [];
+  // From soul.pet
+  const petDesc = pc.soul?.pet || raw.animal_culture?.scene_pet || '';
+  if (petDesc) {
+    const label = petDesc.replace(/— ALWAYS sleeping\/curled up/i,'').replace(/ALWAYS/gi,'').trim();
+    catItems.push({ id: 'cat_main', label: label || 'Sleeping curled on cushion', note: 'SOP — always sleeping', locked: true });
+  }
+  // Format C
+  if (pc.cat_position && Array.isArray(pc.cat_position)) {
+    pc.cat_position.forEach((c, i) => {
+      const locked = c.toLowerCase().includes('sleep') || c.toLowerCase().includes('curl');
+      catItems.push({ id: `cat_${i}`, label: c, note: locked ? 'SOP locked' : '', locked });
+    });
+  }
+  if (!catItems.length) catItems.push({ id: 'cat_default', label: 'Sleeping curled in crescent position', note: 'SOP — always sleeping', locked: true });
+  addCategory('cat', 'Cat Position', 'Always sleeping — SOP rule', catItems);
+
+  // ── ATMOSPHERE / VIBE ──
+  const atm = [];
+  if (raw.identity?.core_vibe) raw.identity.core_vibe.slice(0,4).forEach((v,i) => atm.push({ id:`vibe_${i}`, label:v, note:'', locked:false }));
+  if (pc.atmosphere && Array.isArray(pc.atmosphere)) pc.atmosphere.forEach((a,i) => atm.push({ id:`atm_${i}`, label:a, note:'', locked:false }));
+  if (atm.length) addCategory('atmosphere', 'Atmosphere & Vibe', null, atm, 2);
+
+  // ── SKY / WEATHER ── SOP storm always included
+  const sky = [];
+  // Always add storm clouds as SOP locked first
+  sky.push({ id: 'sky_storm', label: 'Dramatic storm clouds', note: 'SOP — always in sky', locked: true });
+  if (raw.weather_patterns?.visual_effects) {
+    raw.weather_patterns.visual_effects.forEach((w,i) => {
+      if (!w.toLowerCase().includes('thunder') && !w.toLowerCase().includes('storm')) {
+        sky.push({ id:`wx_${i}`, label:w, note:'', locked:false });
+      }
+    });
+  }
+  if (pc.sky_conditions && Array.isArray(pc.sky_conditions)) {
+    pc.sky_conditions.forEach((s,i) => {
+      if (!s.toLowerCase().includes('storm')) sky.push({ id:`sky_${i}`, label:s, note:'', locked:false });
+    });
+  }
+  addCategory('sky', 'Sky & Weather', 'Storm clouds always included — SOP rule', sky, 2);
+
+  // ── LIGHTING ──
+  const lighting = [];
+  if (raw.lighting_style?.night) raw.lighting_style.night.slice(0,4).forEach((l,i) => lighting.push({ id:`lt_${i}`, label:l, note:'', locked:false }));
+  if (raw.lighting_style?.signature) raw.lighting_style.signature.forEach((l,i) => lighting.push({ id:`ls_${i}`, label:l, note:'', locked:false }));
+  if (lighting.length) addCategory('lighting', 'Lighting', null, lighting, 2);
+
+  // Default checks
+  state.categories.forEach(cat => {
+    cat.items.forEach((item, i) => {
+      if (item.locked) item.checked = true;
+      else if (item.checked === undefined) item.checked = i < (cat.defaultChecked ?? 1);
+    });
+  });
+
+  document.getElementById('todBar').style.display = 'flex';
+  renderChecklist();
+  triggerPromptBuild();
+  setStatus('ok', `Research loaded — ${state.city}, ${state.country}`);
+  document.getElementById('copyPromptBtn').disabled = false;
+}
+
+function cleanLandmarkName(str) {
+  // Extract just the name before "with" or comma
+  return str.split(' with ')[0].split(',')[0].trim();
+}
+
+function addCategory(key, label, sopNote, items, defaultChecked) {
+  // Avoid dupes
+  if (state.categories.find(c => c.key === key)) return;
+  state.categories.push({ key, label, sopNote, items, defaultChecked: defaultChecked ?? 1 });
+}
+
+// ── RENDER ──
+function renderChecklist() {
+  const body = document.getElementById('checklistBody');
+  if (!state.categories.length) {
+    body.innerHTML = '<div class="empty-state">No data found in JSON</div>';
+    return;
+  }
+
+  let html = `<div class="city-tag">${state.city.toLowerCase()}, ${state.country.toLowerCase()}</div>`;
+  html += '<div class="checklist-grid">';
+
+  state.categories.forEach(cat => {
+    html += `<div class="category-block">`;
+    html += `<div class="category-label">${cat.label}</div>`;
+    if (cat.sopNote) html += `<div class="category-sop-note">⚠ ${cat.sopNote}</div>`;
+    cat.items.forEach(item => {
+      const checked = item.checked ? 'checked' : '';
+      const lockedAttr = item.locked ? 'disabled' : '';
+      const lockedClass = item.locked ? 'locked' : '';
+      const badge = item.locked ? `<span class="lock-badge">SOP</span>` : '';
+      const note = item.note ? `<span class="item-note">${item.note}</span>` : '';
+      html += `
+        <label class="check-item ${lockedClass}">
+          <input type="checkbox" ${checked} ${lockedAttr}
+            onchange="toggleItem('${cat.key}','${item.id}',this.checked)">
+          <span class="item-text">${item.label}${note}</span>${badge}
+        </label>`;
+    });
+    html += '</div>';
+  });
+
+  html += '</div>';
+  html += `
+    <div class="checklist-actions">
+      <button class="btn ghost" onclick="selectAll()">Select All</button>
+      <button class="btn ghost" onclick="clearOptional()">Clear Optional</button>
+    </div>`;
+
+  body.innerHTML = html;
+  updateCount();
+}
+
+function toggleItem(catKey, itemId, checked) {
+  const cat = state.categories.find(c => c.key === catKey);
+  if (!cat) return;
+  const item = cat.items.find(i => i.id === itemId);
+  if (item && !item.locked) item.checked = checked;
+  updateCount();
+  triggerPromptBuild();
+}
+
+
+function setTimeOfDay(tod) {
+  state.timeOfDay = tod;
+  document.getElementById('tod-night').classList.toggle('active', tod === 'night');
+  document.getElementById('tod-day').classList.toggle('active', tod === 'day');
+  
+  // Update sky category SOP note and storm lock
+  const skyCat = state.categories.find(c => c.key === 'sky');
+  if (skyCat) {
+    const stormItem = skyCat.items.find(i => i.id === 'sky_storm');
+    if (stormItem) {
+      if (tod === 'night') {
+        stormItem.locked = true;
+        stormItem.checked = true;
+        stormItem.note = 'SOP — always in sky at night';
+        skyCat.sopNote = 'Storm clouds always included at night — SOP rule';
+      } else {
+        stormItem.locked = false;
+        stormItem.note = 'Optional in daytime scenes';
+        skyCat.sopNote = 'Day mode — storm clouds optional';
+      }
+    }
+  }
+  
+  const note = document.getElementById('todNote');
+  if (tod === 'night') {
+    note.textContent = 'Storm clouds SOP active · Night mode';
+    note.style.color = 'var(--amber-dim)';
+  } else {
+    note.textContent = 'Day mode — storm clouds optional · Adjust sky freely';
+    note.style.color = '#7a9a5a';
+  }
+  
+  renderChecklist();
+  triggerPromptBuild();
+}
+
+function selectAll() {
+  state.categories.forEach(cat => cat.items.forEach(item => { if (!item.locked) item.checked = true; }));
+  renderChecklist();
+  triggerPromptBuild();
+}
+
+function clearOptional() {
+  state.categories.forEach(cat => cat.items.forEach(item => { if (!item.locked) item.checked = false; }));
+  renderChecklist();
+  triggerPromptBuild();
+}
+
+function updateCount() {
+  let n = 0;
+  state.categories.forEach(cat => cat.items.forEach(item => { if (item.checked) n++; }));
+  document.getElementById('selCount').innerHTML = `<span>${n}</span> selected`;
+}
+
+// ── PROMPT BUILD (debounced) ──
+function triggerPromptBuild() {
+  clearTimeout(promptDebounce);
+  promptDebounce = setTimeout(buildPrompt, 400);
+}
+
+function getSelected() {
+  const out = {};
+  state.categories.forEach(cat => {
+    out[cat.key] = cat.items.filter(i => i.checked).map(i => i.label);
+  });
+  return out;
+}
+
+async function buildPrompt() {
+  const sel = getSelected();
+  const total = Object.values(sel).flat().length;
+  if (total === 0) {
+    document.getElementById('promptPreview').innerHTML = '<span class="prompt-placeholder">Tick elements to build your prompt in real time...</span>';
+    return;
+  }
+
+  const apiKey = document.getElementById('apiKey').value.trim() || localStorage.getItem('anthropic_key');
+  if (!apiKey) { buildLocally(sel); return; }
+
+  setStatus('active', 'Building prompt...');
+  document.getElementById('spinnerWrap').classList.add('show');
+
+  const summary = state.categories
+    .map(cat => {
+      const items = sel[cat.key];
+      return items?.length ? `${cat.label}: ${items.join(', ')}` : null;
+    })
+    .filter(Boolean).join('\n');
+
+  const system = `You are a cinematic image prompt writer for lo-fi city ambience YouTube videos.
+Write ONE precise, vivid Leonardo.ai image prompt based on the selected scene elements.
+
+STRICT SOP RULES — always apply, no exceptions:
+- Cat is ALWAYS sleeping/curled — never standing, walking, or upright
+- Storm clouds ALWAYS appear in the sky — dramatic, anvil formations
+- The primary landmark fills 30-50% of window vertical space — towering, dominant, majestic
+- Wide room composition — full interior room width visible, not cramped
+- Window occupies centre third of frame only
+- Time of day: USE THE SELECTED TIME OF DAY passed in the user message — adjust lighting, mood and sky accordingly
+
+OUTPUT FORMAT: Single flowing paragraph. No headers. No lists. No intro text. Just the prompt.
+End every prompt with: Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
+
+  const user = `City: ${state.city}, ${state.country}
+Time of Day: ${state.timeOfDay === 'night' ? 'Night / Evening' : 'Daytime'}
+Setting: ${state.city} apartment, ${state.timeOfDay === 'night' ? 'late evening' : 'daytime'}
+
+Selected scene elements:
+${summary}
+
+Write the image prompt now.`;
+
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': apiKey,
+        'anthropic-version': '2023-06-01',
+        'anthropic-dangerous-direct-browser-access': 'true',
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-20250514',
+        max_tokens: 600,
+        system,
+        messages: [{ role: 'user', content: user }]
+      })
+    });
+    const data = await res.json();
+    if (data.content?.[0]?.text) {
+      document.getElementById('promptPreview').textContent = data.content[0].text.trim();
+      setStatus('ok', `Prompt ready — ${state.city}`);
+    } else {
+      buildLocally(sel);
+    }
+  } catch(e) {
+    buildLocally(sel);
+  }
+  document.getElementById('spinnerWrap').classList.remove('show');
+}
+
+function buildLocally(sel) {
+  const lm = sel.landmarks?.[0] || '';
+  const cat = sel.cat?.[0] || 'British Shorthair cat sleeping curled';
+  const table = sel.table?.join(', ') || '';
+  const interior = sel.interior?.join(', ') || '';
+  const atm = sel.atmosphere?.[0]?.toLowerCase() || 'evening ambience';
+  const sky = sel.sky?.join(', ') || 'dramatic storm clouds';
+  const soul = sel.soul?.join(', ') || '';
+  const lighting = sel.lighting?.join(', ') || '';
+
+  let p = `Wide cinematic 16:9 interior shot of a ${state.city} apartment at ${state.timeOfDay === 'night' ? 'late evening' : 'daytime'}. Wide establishing shot showing full interior room width, window occupying centre third of frame.`;
+  if (cat) p += ` ${cat} on cushion beside the window.`;
+  if (table) p += ` ${table} on the table.`;
+  if (interior) p += ` ${interior} visible in the room.`;
+  if (soul) p += ` ${soul}.`;
+  if (lm) p += ` The towering, majestic, dominant ${lm} fills 40% of window vertical space.`;
+  p += ` ${sky} filling the sky.`;
+  if (lighting) p += ` ${lighting}.`;
+  p += ` Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
+
+  document.getElementById('promptPreview').textContent = p;
+  setStatus('ok', `Prompt ready — ${state.city} (local)`);
+  document.getElementById('spinnerWrap').classList.remove('show');
+}
+
+// ── COPY ──
+function copyPrompt() {
+  const text = document.getElementById('promptPreview').textContent;
+  if (!text || text.includes('Tick elements')) return;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = document.getElementById('copyPromptBtn');
+    const orig = btn.textContent;
+    btn.textContent = '✓ Copied';
+    setTimeout(() => btn.textContent = orig, 1500);
+  });
+}
+function copyNegative() {
+  navigator.clipboard.writeText(NEGATIVE).then(() => {
+    const b = document.querySelectorAll('.copy-row .btn')[1];
+    b.textContent = '✓ Copied';
+    setTimeout(() => b.textContent = 'Copy Negative', 1500);
+  });
+}
+
+// ── STATUS ──
+function setStatus(type, msg) {
+  document.getElementById('statusText').textContent = msg;
+  const dot = document.getElementById('statusDot');
+  dot.className = 'status-dot' + (type === 'active' ? ' active' : type === 'ok' ? ' ok' : '');
+}
+</script>
+</body>
+</html>
