@@ -565,7 +565,7 @@ function parseJSON() {
   // -- ABOVE FIREPLACE (from landmarks + architecture) --
   const aboveItems = [];
   const primaryLmName = pc.anchor && pc.anchor.landmark ? cleanLandmarkName(pc.anchor.landmark) : (raw.landmarks && raw.landmarks.man_made && raw.landmarks.man_made[0] ? raw.landmarks.man_made[0].name : state.city);
-  aboveItems.push({ id: 'abv_photo', label: primaryLmName + ' photography print', note: 'city art', locked: false });
+  aboveItems.push({ id: 'abv_photo', label: primaryLmName + ' photography print — DAYTIME shot, different from window view', note: 'must contrast window', locked: false });
   aboveItems.push({ id: 'abv_painting', label: 'Painted cityscape of ' + primaryLmName, note: 'city art', locked: false });
   if (archStr.includes('colonial') || archStr.includes('classic') || archStr.includes('georgian') || archStr.includes('haussmann')) {
     aboveItems.push({ id: 'abv_mirror', label: 'Ornate gilt mirror above fireplace', note: 'European style', locked: false });
@@ -768,11 +768,13 @@ STRICT SOP RULES — always apply, no exceptions:
 - Window occupies centre third of frame only
 - A fireplace is ALWAYS present, left of frame, never centred, max 20% image width, style matches city architecture
 - Fireplace mantle always has decorations: lamp, candles, or city artifact on it
-- Art, mirror or photography always displayed above fireplace, city-themed
+- Art, mirror or photography always displayed above fireplace — MUST be a different view/angle/time of day than what is visible through the window, never duplicating the window scene
+- Rain droplets visible on the interior side of window glass, catching fireplace light
+- ALL food and drink items MUST look photorealistic — never plastic, waxy, or fake. Describe textures explicitly: steam rising from coffee, glossy jam on toast, condensation on glass, crumbs on plate
 - Time of day: USE THE SELECTED TIME OF DAY passed in the user message — adjust lighting, mood and sky accordingly
 
 OUTPUT FORMAT: Single flowing paragraph. No headers. No lists. No intro text. Just the prompt.
-End every prompt with: Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
+End every prompt with: All food and drinks photorealistic with visible textures — steam, gloss, crumbs, condensation. Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
 
   const user = `City: ${state.city}, ${state.country}
 Time of Day: ${state.timeOfDay === 'night' ? 'Night / Evening' : 'Daytime'}
@@ -836,7 +838,7 @@ function buildLocally(sel) {
   if (petSel) p += ` ${petSel} sleeping curled on cushion near the fireplace warmth.`;
   p += ` ${sky} filling the sky.`;
   if (lighting) p += ` ${lighting}.`;
-  p += ` Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
+  p += ` All food and drinks photorealistic with visible textures — steam, gloss, crumbs, condensation. Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
 
   document.getElementById('promptPreview').textContent = p;
   setStatus('ok', `Prompt ready — ${state.city} (local)`);
