@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -536,6 +537,59 @@ function parseJSON() {
   if (raw.lighting_style?.signature) raw.lighting_style.signature.forEach((l,i) => lighting.push({ id:`ls_${i}`, label:l, note:'', locked:false }));
   if (lighting.length) addCategory('lighting', 'Lighting', null, lighting, 2);
 
+
+  // -- FIREPLACE STYLE (SOP locked, style from architecture) --
+  const archStyles = raw.architecture && raw.architecture.dominant_styles ? raw.architecture.dominant_styles : [];
+  let fireplaceStyle = 'Sleek built-in linear fireplace';
+  const archStr = archStyles.join(' ').toLowerCase();
+  if (archStr.includes('colonial') || archStr.includes('classic') || archStr.includes('baroque') || archStr.includes('georgian') || archStr.includes('haussmann')) {
+    fireplaceStyle = 'Ornate marble mantle fireplace';
+  } else if (archStr.includes('roman') || archStr.includes('rustic') || archStr.includes('terracotta') || archStr.includes('medieval') || archStr.includes('stone')) {
+    fireplaceStyle = 'Rustic stone hearth fireplace';
+  }
+  addCategory('fireplace', 'Fireplace', 'SOP locked — always left of frame, max 20% width', [
+    { id: 'fp_style', label: fireplaceStyle, note: 'SOP — always present, never centred', locked: true }
+  ]);
+
+  // -- MANTLE DECORATIONS (from iconic_objects + lighting) --
+  const mantleItems = [];
+  const iconicObjs = raw.iconic_objects && Array.isArray(raw.iconic_objects) ? raw.iconic_objects : [];
+  mantleItems.push({ id: 'mnt_lamp', label: 'Warm lamp on mantle', note: '', locked: false });
+  mantleItems.push({ id: 'mnt_candle', label: 'Candles on mantle', note: '', locked: false });
+  iconicObjs.slice(0, 3).forEach(function(obj, i) {
+    mantleItems.push({ id: 'mnt_ico_' + i, label: obj + ' on mantle', note: 'city artifact', locked: false });
+  });
+  mantleItems.push({ id: 'mnt_flowers', label: 'Fresh flowers on mantle', note: '', locked: false });
+  addCategory('mantle', 'Mantle Decorations', 'Lamp or candles recommended', mantleItems, 1);
+
+  // -- ABOVE FIREPLACE (from landmarks + architecture) --
+  const aboveItems = [];
+  const primaryLmName = pc.anchor && pc.anchor.landmark ? cleanLandmarkName(pc.anchor.landmark) : (raw.landmarks && raw.landmarks.man_made && raw.landmarks.man_made[0] ? raw.landmarks.man_made[0].name : state.city);
+  aboveItems.push({ id: 'abv_photo', label: primaryLmName + ' photography print', note: 'city art', locked: false });
+  aboveItems.push({ id: 'abv_painting', label: 'Painted cityscape of ' + primaryLmName, note: 'city art', locked: false });
+  if (archStr.includes('colonial') || archStr.includes('classic') || archStr.includes('georgian') || archStr.includes('haussmann')) {
+    aboveItems.push({ id: 'abv_mirror', label: 'Ornate gilt mirror above fireplace', note: 'European style', locked: false });
+  } else {
+    const vibe = raw.identity && raw.identity.core_vibe && raw.identity.core_vibe[0] ? raw.identity.core_vibe[0] : state.city + ' vibe';
+    aboveItems.push({ id: 'abv_abstract', label: 'Abstract canvas — ' + vibe, note: 'contemporary', locked: false });
+  }
+  aboveItems.push({ id: 'abv_sketch', label: 'Framed architectural landmark sketch', note: '', locked: false });
+  addCategory('above_fireplace', 'Above Fireplace', 'City-themed art, mirror or photography', aboveItems, 1);
+
+  // -- PET (research-driven, NOT locked) --
+  const petItems = [];
+  const scenePetRaw = (pc.soul && pc.soul.pet) ? pc.soul.pet : (raw.animal_culture && raw.animal_culture.scene_pet ? raw.animal_culture.scene_pet : '');
+  if (scenePetRaw) {
+    const cleanPet = scenePetRaw.replace(/— ALWAYS sleeping\/curled up/gi, '').replace(/ALWAYS/gi, '').trim();
+    petItems.push({ id: 'pet_main', label: cleanPet, note: 'research recommended', locked: false, checked: true });
+  }
+  const culturalAnimals = raw.animal_culture && Array.isArray(raw.animal_culture.cultural_animals) ? raw.animal_culture.cultural_animals : [];
+  culturalAnimals.slice(0, 2).forEach(function(animal, i) {
+    petItems.push({ id: 'pet_alt_' + i, label: animal + ' (cultural alternative)', note: '', locked: false });
+  });
+  if (!petItems.length) petItems.push({ id: 'pet_default', label: 'Cat sleeping curled on cushion', note: '', locked: false, checked: true });
+  addCategory('pet', 'Pet & Animal', 'From city research — always sleeping near fire', petItems, 1);
+
   // Default checks
   state.categories.forEach(cat => {
     cat.items.forEach((item, i) => {
@@ -712,6 +766,9 @@ STRICT SOP RULES — always apply, no exceptions:
 - The primary landmark fills 30-50% of window vertical space — towering, dominant, majestic
 - Wide room composition — full interior room width visible, not cramped
 - Window occupies centre third of frame only
+- A fireplace is ALWAYS present, left of frame, never centred, max 20% image width, style matches city architecture
+- Fireplace mantle always has decorations: lamp, candles, or city artifact on it
+- Art, mirror or photography always displayed above fireplace, city-themed
 - Time of day: USE THE SELECTED TIME OF DAY passed in the user message — adjust lighting, mood and sky accordingly
 
 OUTPUT FORMAT: Single flowing paragraph. No headers. No lists. No intro text. Just the prompt.
@@ -765,12 +822,18 @@ function buildLocally(sel) {
   const soul = sel.soul?.join(', ') || '';
   const lighting = sel.lighting?.join(', ') || '';
 
+  const fp = sel.fireplace && sel.fireplace[0] ? sel.fireplace[0] : 'sleek built-in fireplace';
+  const mantle = sel.mantle && sel.mantle.length ? sel.mantle.slice(0,2).join(' and ') : 'candles on mantle';
+  const aboveFp = sel.above_fireplace && sel.above_fireplace[0] ? sel.above_fireplace[0] : 'city photography print';
+  const petSel = sel.pet && sel.pet[0] ? sel.pet[0] : (sel.cat && sel.cat[0] ? sel.cat[0] : 'cat sleeping curled');
   let p = `Wide cinematic 16:9 interior shot of a ${state.city} apartment at ${state.timeOfDay === 'night' ? 'late evening' : 'daytime'}. Wide establishing shot showing full interior room width, window occupying centre third of frame.`;
-  if (cat) p += ` ${cat} on cushion beside the window.`;
+  // pet handled above with fireplace
   if (table) p += ` ${table} on the table.`;
   if (interior) p += ` ${interior} visible in the room.`;
   if (soul) p += ` ${soul}.`;
   if (lm) p += ` The towering, majestic, dominant ${lm} fills 40% of window vertical space.`;
+  p += ` On the left side, a ${fp} with ${mantle} and ${aboveFp} above it, flames casting warm amber glow, occupying no more than 20% of frame width.`;
+  if (petSel) p += ` ${petSel} sleeping curled on cushion near the fireplace warmth.`;
   p += ` ${sky} filling the sky.`;
   if (lighting) p += ` ${lighting}.`;
   p += ` Cinematic lighting, ultra realistic, volumetric light, soft glow, moody atmosphere, depth, warm interior contrast, night ambience, highly detailed, immersive, 4k, filmic tone`;
